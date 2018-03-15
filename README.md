@@ -5,4 +5,6 @@ Covered strategies:
  - LRU
  - LFU
 
-See https://en.wikipedia.org/wiki/Cache_replacement_policies for more information
+See [this wikipedia article][1] for more cache strategies
+
+[1]: https://en.wikipedia.org/wiki/Cache_replacement_policies

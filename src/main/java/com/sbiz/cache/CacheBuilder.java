@@ -8,6 +8,7 @@ public class CacheBuilder implements CacheDefaults {
     private boolean diskEnabled = DEFAULT_DISK_ENABLED;
     private String diskLocation = DEFAULT_DISK_LOCATION;
     private int maxSize = DEFAULT_MAX_SIZE;
+    private boolean updateExisting = DEFAULT_UPDATE_EXISTING;
 
     //By default disk caching is disabled. Use this method to enable.
     public CacheBuilder enableDiskCaching() {
@@ -31,6 +32,14 @@ public class CacheBuilder implements CacheDefaults {
         return this;
     }
 
+    /**
+     * Update the values when accessing put() with keys alread in the cache
+     * @param updateExisting 
+     */
+    public CacheBuilder updateExisting(boolean updateExisting) {
+        this.updateExisting = updateExisting;
+    }
+
 	/**
 	 * @return the diskEnabled
 	 */
@@ -50,6 +59,10 @@ public class CacheBuilder implements CacheDefaults {
 	 */
 	public int getMaxSize() {
 		return maxSize;
+	}
+
+	public boolean isUpdateExisting() {
+		return updateExisting;
 	}
     
 }

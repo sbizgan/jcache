@@ -52,12 +52,15 @@ public class LRUCache<K, V> extends ACache<K, V> {
         setDiskLocation(builder.getDiskLocation());
         setDiskEnabled(builder.isDiskEnabled());
         setMaxSize(builder.getMaxSize());
+        setUpdateExisting(builder.isUpdateExisting());
 
         logger.debug("... defaults modified");
     }
 
     public void put(K key, V value) {
         if (cache.containsKey(key)) {
+            if (isUpdateExisting())
+                cache.get(key).value = value;
             return;
         }
 

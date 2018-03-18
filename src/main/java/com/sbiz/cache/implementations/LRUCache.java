@@ -124,7 +124,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
             previousNode.next = null;
             currentNode.previous = null;
             mostRecentlyUsed = previousNode;
-            return tempNode.value;
+            return currentNode.value;
         }
 
         // If LRU
@@ -132,17 +132,16 @@ public class LRUCache<K, V> extends ACache<K, V> {
             nextNode.previous = null;
             currentNode.next = null;
             leastRecentlyUsed = nextNode;
-            return tempNode.value;
+            return currentNode.value;
         }
 
         // If middle
         previousNode.next = nextNode;
         nextNode.previous = previousNode;
-        tempNode.next = null;
-        tempNode.previous = null;
+        currentNode.next = null;
+        currentNode.previous = null;
 
-
-        return 
+        return currentNode.value;
     }
 
     public boolean isEmpty() {

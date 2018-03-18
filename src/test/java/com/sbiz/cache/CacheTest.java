@@ -1,7 +1,5 @@
 package com.sbiz.cache;
 
-import com.sbiz.cache.implementations.LFUCache;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

@@ -104,11 +104,49 @@ public class LRUCache<K, V> extends ACache<K, V> {
     }
 
     public V remove(K key) {
-        return null;
+
+        Node<K, V> currentNode = cache.get(key);
+        if (currentNode == null) {
+            return null;
+        }
+
+        // Get the next and previous nodes
+        Node<K, V> nextNode = currentNode.next;
+        Node<K, V> previousNode = currentNode.previous;
+
+        // Remove the object from the cache
+        cache.remove(key);
+
+        // Update internals
+
+        // If MRU
+        if (currentNode.key == mostRecentlyUsed.key) {
+            previousNode.next = null;
+            currentNode.previous = null;
+            mostRecentlyUsed = previousNode;
+            return tempNode.value;
+        }
+
+        // If LRU
+        if (currentNode.key == leastRecentlyUsed.key) {
+            nextNode.previous = null;
+            currentNode.next = null;
+            leastRecentlyUsed = nextNode;
+            return tempNode.value;
+        }
+
+        // If middle
+        previousNode.next = nextNode;
+        nextNode.previous = previousNode;
+        tempNode.next = null;
+        tempNode.previous = null;
+
+
+        return 
     }
 
     public boolean isEmpty() {
-        return false;
+        return cache.isEmpty();
     }
 
     public int size() {
@@ -116,7 +154,12 @@ public class LRUCache<K, V> extends ACache<K, V> {
     }
 
     public void clear() {
+        //clear map
+        cache.clear();
 
+        //reinitilize internals 
+        leastRecentlyUsed = new Node<K, V>(null, null, null, null);
+        mostRecentlyUsed = leastRecentlyUsed;
     }
 
 }

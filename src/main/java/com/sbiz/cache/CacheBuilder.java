@@ -7,7 +7,7 @@ import com.sbiz.cache.implementations.LRUCache;
 /**
  * Class for Cache creation
  */
-public class CacheBuilder {
+public class CacheBuilder implements CacheDefaults {
 
 
     //default setting for disk caching is set to false;
@@ -15,6 +15,8 @@ public class CacheBuilder {
 
     //default caching location is...
     private String diskLocation;
+
+    private int maxSize = DEFAULT_MAX_SIZE;
         
     private ACache cacheImplementation;
 
@@ -42,9 +44,15 @@ public class CacheBuilder {
         return this;
     }
 
+    public CacheBuilder maxSize(int size) throws Exception {
+        this.maxSize = size;
+        return this;
+    }
+
     public Cache create() {
         cacheImplementation.setDiskLocation(diskLocation);
         cacheImplementation.setDiskEnabled(diskEnabled);
+        cacheImplementation.setMaxSize(maxSize);
         return cacheImplementation;
     }
 

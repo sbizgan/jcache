@@ -30,10 +30,14 @@ public class CacheTest extends TestCase {
      * Rigourous Test :-)
      */
     public void testCache() {
+        
+        //TODO verify with maxSize < 0;
+
         try {
 			Cache myCache = new CacheBuilder()
                     .LRUCache()
                     .diskLocation("some location here test")
+                    .maxSize(100)
                     .create();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

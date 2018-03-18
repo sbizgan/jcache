@@ -2,6 +2,11 @@ package com.sbiz.cache.implementations;
 
 import java.util.HashMap;
 
+import com.sbiz.cache.CacheBuilder;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Least-recently used (LRU) implementation of a cache
  * Sources of inspiration: 
@@ -9,6 +14,8 @@ import java.util.HashMap;
  *  - https://commons.apache.org/proper/commons-collections/apidocs/src-html/org/apache/commons/collections4/map/LRUMap.html
  */
 public class LRUCache<K, V> extends ACache<K, V> {
+
+    Logger logger = LoggerFactory.getLogger(LRUCache.class);
 
     class Node<T, U> {
         Node<T, U> previous;
@@ -35,6 +42,18 @@ public class LRUCache<K, V> extends ACache<K, V> {
         mostRecentlyUsed = leastRecentlyUsed;
         cache = new HashMap<K, Node<K, V>>();
         size = 0;
+
+        logger.debug("Logger created with id {}", this);
+    }
+
+    public LRUCache(CacheBuilder builder) {
+        this();
+
+        setDiskLocation(builder.getDiskLocation());
+        setDiskEnabled(builder.isDiskEnabled());
+        setMaxSize(builder.getMaxSize());
+
+        logger.debug("... defaults modified");
     }
 
     public void put(K key, V value) {
@@ -62,6 +81,8 @@ public class LRUCache<K, V> extends ACache<K, V> {
             }
             size++;
         }
+
+        logger.debug("Object added. Size: {}", size);
     }
 
     public V get(K key) {
@@ -124,6 +145,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
             previousNode.next = null;
             currentNode.previous = null;
             mostRecentlyUsed = previousNode;
+            size--;
             return currentNode.value;
         }
 
@@ -132,6 +154,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
             nextNode.previous = null;
             currentNode.next = null;
             leastRecentlyUsed = nextNode;
+            size--;
             return currentNode.value;
         }
 
@@ -140,7 +163,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
         nextNode.previous = previousNode;
         currentNode.next = null;
         currentNode.previous = null;
-
+        size--;
         return currentNode.value;
     }
 
@@ -159,6 +182,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
         //reinitilize internals 
         leastRecentlyUsed = new Node<K, V>(null, null, null, null);
         mostRecentlyUsed = leastRecentlyUsed;
+        size = 0;
     }
 
 }

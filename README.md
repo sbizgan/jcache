@@ -1,6 +1,11 @@
 # jcache
 Java Cache implementations
 
+Covered requirements:
+ - Thread safe
+ - Support for multiple cache strategies
+ - Support 2 levels of cache (memory and disk)
+
 Covered strategies:
  - LRU
  - LFU

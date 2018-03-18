@@ -33,7 +33,7 @@ public class CacheTest extends TestCase {
         try {
 			Cache myCache = new CacheBuilder()
                     .LRUCache()
-                    .diskLocation("some location here")
+                    .diskLocation("some location here test")
                     .create();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

@@ -37,24 +37,23 @@ public class LRUCache<K, V> extends ACache<K, V> {
 
     private int size;
 
-    public LRUCache() {
+    private void initialize() {
+        setCacheStrategy("LRU");
         leastRecentlyUsed = new Node<K, V>(null, null, null, null);
         mostRecentlyUsed = leastRecentlyUsed;
         cache = new HashMap<K, Node<K, V>>();
         size = 0;
+        logger.debug("{} | Cache initialized", this);
+    }
 
-        logger.debug("Logger created with id {}", this);
+    public LRUCache() {
+        initialize();
+
     }
 
     public LRUCache(CacheBuilder builder) {
-        this();
-
-        setDiskLocation(builder.getDiskLocation());
-        setDiskEnabled(builder.isDiskEnabled());
-        setMaxSize(builder.getMaxSize());
-        setUpdateExisting(builder.isUpdateExisting());
-
-        logger.debug("... defaults modified");
+        super(builder);
+        initialize();
     }
 
     public void put(K key, V value) {
@@ -85,7 +84,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
             size++;
         }
 
-        logger.debug("Object added. Size: {}", size);
+        logger.debug("{} | Object added", this.toString());
     }
 
     public V get(K key) {
@@ -187,5 +186,17 @@ public class LRUCache<K, V> extends ACache<K, V> {
         mostRecentlyUsed = leastRecentlyUsed;
         size = 0;
     }
+
+	@Override
+	public String internals() {
+        StringBuffer sb = new StringBuffer();
+        Node<K, V> current = leastRecentlyUsed;
+        sb.append(current.key);
+        while(!current.equals(mostRecentlyUsed)) {
+            sb.append(">").append(current.next.key);
+            current = current.next;
+        }
+        return sb.toString();
+	}
 
 }

@@ -48,4 +48,23 @@ class LRUCacheTest {
         assertTrue(testCache.size() == 1);
     }
 
+    @Test
+    @DisplayName("Some basic tests")
+    void basicTest() {
+        LRUCache cache = null;
+		try {
+			cache = new LRUCache(new CacheBuilder().maxSize(5).printInternalsInDebug(true));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+        }
+        
+        //TODO What will happen if we set Max size -1 or less than the size? test
+        cache.put("A", "Bim");
+        cache.put("B", "Bam");
+        cache.get("A");
+        cache.put("C", "Bum");
+        assertTrue(true);
+    }
+
 }

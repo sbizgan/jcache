@@ -9,6 +9,7 @@ public class CacheBuilder implements CacheDefaults {
     private String diskLocation = DEFAULT_DISK_LOCATION;
     private int maxSize = DEFAULT_MAX_SIZE;
     private boolean updateExisting = DEFAULT_UPDATE_EXISTING;
+    private boolean printInternalsDebug = DEFAULT_PRINT_INTERNALS_DEBUG;
 
     //By default disk caching is disabled. Use this method to enable.
     public CacheBuilder enableDiskCaching() {
@@ -38,6 +39,7 @@ public class CacheBuilder implements CacheDefaults {
      */
     public CacheBuilder updateExisting(boolean updateExisting) {
         this.updateExisting = updateExisting;
+        return this;
     }
 
 	/**
@@ -64,5 +66,22 @@ public class CacheBuilder implements CacheDefaults {
 	public boolean isUpdateExisting() {
 		return updateExisting;
 	}
+
+	/**
+	 * @return the printInternalsDebug
+	 */
+	public boolean isPrintInternalsDebug() {
+		return printInternalsDebug;
+	}
+
+
+	/**
+	 * @return the printInternalsDebug
+	 */
+	public CacheBuilder printInternalsInDebug(boolean printInternalsInDebug) {
+        this.printInternalsDebug = printInternalsInDebug;
+		return this;
+	}
+
     
 }

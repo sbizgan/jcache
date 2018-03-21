@@ -28,12 +28,13 @@ public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
     // If key exists should put() method update the value?
     private boolean updateExisting = DEFAULT_UPDATE_EXISTING;
 
-	protected ACache() {
+	protected int size;
 
+	protected ACache() {
+		size = 0;
 	}
-	
+
 	protected ACache(CacheBuilder builder) {
-		logger.debug("ACache constructor with buidler");
         setDiskLocation(builder.getDiskLocation());
         setDiskEnabled(builder.isDiskEnabled());
         setMaxSize(builder.getMaxSize());
@@ -41,6 +42,9 @@ public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
 		setPrintInternalsDebug(builder.isPrintInternalsDebug());
 	}
 
+	public int size() {
+		return size;
+	}
 
 	public boolean isDiskEnabled () {
         return diskEnabled;
@@ -101,12 +105,11 @@ public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
 	}
 		
     public String toString() {
-		String fillRatio = String.format("% 4d",(int)((size() * 100.0f)/maxSize));
+		String fillRatio = String.format("%3d",(int)((size() * 100.0f)/maxSize));
 		StringBuilder sb = new StringBuilder("Cache ").append(cacheStrategy)
 					.append("[").append(hashCode()).append("]")
 					.append(" Fill ratio: [").append(fillRatio).append("]");
-		if (isPrintInternalsDebug())
-			sb.append(" | ").append(internals());
+
         return sb.toString();
 	}
 
@@ -125,6 +128,12 @@ public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
 	public void setPrintInternalsDebug(boolean printInternalsDebug) {
 		this.printInternalsDebug = printInternalsDebug;
 	}
+
+	public void put(K key, V value) {
+		logger.debug("{} | Object added", this.toString());
+		if (isPrintInternalsDebug())
+			logger.debug("    {}", internals());
+	} 
 
 }
     

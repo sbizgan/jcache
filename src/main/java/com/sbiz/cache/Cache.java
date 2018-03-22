@@ -1,7 +1,9 @@
 package com.sbiz.cache;
 
 /**
- * Cache interface
+ * Cache interface <br><br>
+ * Use by instantiating an implementation (ex. LRUCache)
+ * either using defaults or by providing to the contructor a CacheBuilder
  */
 public interface Cache<K, V> {
 

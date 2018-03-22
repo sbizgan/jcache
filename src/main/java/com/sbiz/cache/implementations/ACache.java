@@ -9,8 +9,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
 
-    Logger logger = LoggerFactory.getLogger(ACache.class);
-
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private String cacheStrategy;
 
@@ -32,15 +31,22 @@ public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
 
 	protected ACache() {
 		size = 0;
+		initialize();
 	}
 
 	protected ACache(CacheBuilder builder) {
-        setDiskLocation(builder.getDiskLocation());
+		this();
+		setDiskLocation(builder.getDiskLocation());
         setDiskEnabled(builder.isDiskEnabled());
         setMaxSize(builder.getMaxSize());
 		setUpdateExisting(builder.isUpdateExisting());
 		setPrintInternalsDebug(builder.isPrintInternalsDebug());
+
 	}
+
+	public abstract String internals();
+	
+	protected abstract void initialize();
 
 	public int size() {
 		return size;
@@ -112,8 +118,6 @@ public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
 
         return sb.toString();
 	}
-
-	public abstract String internals();
 
 	/**
 	 * @return the printInternalsDebug

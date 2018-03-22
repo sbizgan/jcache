@@ -1,3 +1,0 @@
-1. Max Size - no available memory? Should it default to disk?
-2. Can we change settings to instantiated caches?
-3. 

@@ -1,8 +1,6 @@
 package com.sbiz.cache.implementations;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,8 +15,6 @@ import org.slf4j.LoggerFactory;
  * 	- http://www.javarticles.com/2012/06/lfu-cache.html
  */
 public class LFUCache<K, V> extends ACache<K, V> {
-
-	Logger logger = LoggerFactory.getLogger(LFUCache.class);
 
 	private class Node<Key, Value> {
 		public final Key key;
@@ -36,15 +32,14 @@ public class LFUCache<K, V> extends ACache<K, V> {
 	private ConcurrentHashMap<Integer, HashSet<K>> frequencies;
 
 	public LFUCache() {
-		initialize();
+		super();
 	}
 
 	public LFUCache(CacheBuilder builder) {
 		super(builder);
-		initialize();
 	}
 
-	private void initialize() {
+	protected void initialize() {
 		setCacheStrategy("LFU");
 		frequencies = new ConcurrentHashMap<Integer, HashSet<K>>();
 		cache = new ConcurrentHashMap<K, Node<K, V>>();

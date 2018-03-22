@@ -1,7 +1,7 @@
 package com.sbiz.cache;
 
 /**
- * Class for Cache creation
+ * Class for setting up a cache builder
  */
 public class CacheBuilder implements CacheDefaults {
 

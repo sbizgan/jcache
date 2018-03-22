@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.sbiz.cache.implementations.LFUCache;
-import com.sbiz.cache.implementations.LRUCache;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,7 @@ class LFUCacheTest {
     @DisplayName("Test creating LFUCache instance")
     void simpleTest() {
         try {
-            new LFUCache();
+            new LFUCache<String, String>();
         } catch (Exception e) {
             fail("Could not create class: " + e.getMessage());
         }
@@ -25,9 +24,8 @@ class LFUCacheTest {
     @Test
     @DisplayName("Test LRUCache with size smaller than 1")
     void smallSizeTest() {
-        Cache<String, ?> testCache = null;
         try {
-            testCache = new LFUCache(new CacheBuilder().maxSize(0));
+            new LFUCache<String, String>(new CacheBuilder().maxSize(0));
         } catch (Exception e) {
             assert(true);
             return;
@@ -38,9 +36,9 @@ class LFUCacheTest {
     @Test
     @DisplayName("Test LFUCache with size 1")
     void sizeOneTest() {
-        Cache testCache = null;
+        Cache<String, String> testCache = null;
         try {
-            testCache = new LFUCache(new CacheBuilder().maxSize(1));
+            testCache = new LFUCache<String, String>(new CacheBuilder().maxSize(1));
         } catch (Exception e) {
             fail("Failed to create cache", e);
         }
@@ -52,9 +50,9 @@ class LFUCacheTest {
     @Test
     @DisplayName("Some basic tests")
     void basicTest() {
-        LFUCache cache = null;
+        LFUCache<String, String> cache = null;
 		try {
-			cache = new LFUCache(new CacheBuilder().maxSize(3).printInternalsInDebug(true));
+			cache = new LFUCache<String, String>(new CacheBuilder().maxSize(3).printInternalsInDebug(true));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			fail(e.getMessage());

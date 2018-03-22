@@ -14,8 +14,9 @@ class LRUCacheTest {
     @DisplayName("Test creating LRUCache instance")
     void simpleTest() {
         try {
-            new LRUCache();
+            new LRUCache<String, String>();
         } catch (Exception e) {
+            e.printStackTrace();
             fail("Could not create class: " + e.getMessage());
         }
         assert(true);
@@ -24,9 +25,8 @@ class LRUCacheTest {
     @Test
     @DisplayName("Test LRUCache with size smaller than 1")
     void smallSizeTest() {
-        Cache<String, ?> testCache = null;
         try {
-            testCache = new LRUCache(new CacheBuilder().maxSize(0));
+            new LRUCache<String, String>(new CacheBuilder().maxSize(0));
         } catch (Exception e) {
             assert(true);
             return;
@@ -37,9 +37,9 @@ class LRUCacheTest {
     @Test
     @DisplayName("Test LRUCache with size 1")
     void sizeOneTest() {
-        Cache testCache = null;
+        Cache<String, String> testCache = null;
         try {
-            testCache = new LRUCache(new CacheBuilder().maxSize(1));
+            testCache = new LRUCache<String, String>(new CacheBuilder().maxSize(1));
         } catch (Exception e) {
             fail("Failed to create cache", e);
         }
@@ -51,9 +51,9 @@ class LRUCacheTest {
     @Test
     @DisplayName("Some basic tests")
     void basicTest() {
-        LRUCache cache = null;
+        LRUCache<String, String> cache = null;
 		try {
-			cache = new LRUCache(new CacheBuilder().maxSize(3).printInternalsInDebug(true));
+			cache = new LRUCache<String, String>(new CacheBuilder().maxSize(3).printInternalsInDebug(true));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			fail(e.getMessage());

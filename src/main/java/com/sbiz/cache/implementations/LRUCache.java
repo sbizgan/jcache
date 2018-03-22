@@ -1,6 +1,5 @@
 package com.sbiz.cache.implementations;
 
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.sbiz.cache.CacheBuilder;
@@ -15,8 +14,6 @@ import org.slf4j.LoggerFactory;
  *  - https://commons.apache.org/proper/commons-collections/apidocs/src-html/org/apache/commons/collections4/map/LRUMap.html
  */
 public class LRUCache<K, V> extends ACache<K, V> {
-
-    Logger logger = LoggerFactory.getLogger(LRUCache.class);
 
     private class Node<Key, Value> {
         Node<Key, Value> previous;
@@ -37,15 +34,14 @@ public class LRUCache<K, V> extends ACache<K, V> {
     private Node<K, V> mostRecentlyUsed;
 
     public LRUCache() {
-        initialize();
+        super();
     }
 
     public LRUCache(CacheBuilder builder) {
         super(builder);
-        initialize();
     }
     
-    private void initialize() {
+    protected void initialize() {
         setCacheStrategy("LRU");
         leastRecentlyUsed = new Node<K, V>(null, null, null, null);
         mostRecentlyUsed = leastRecentlyUsed;

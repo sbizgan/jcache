@@ -4,9 +4,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.sbiz.cache.CacheBuilder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Least-recently used (LRU) implementation of a cache
  * Sources of inspiration: 

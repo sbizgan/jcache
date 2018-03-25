@@ -3,6 +3,7 @@ package com.sbiz.cache.implementations;
 import com.sbiz.cache.Cache;
 import com.sbiz.cache.CacheBuilder;
 import com.sbiz.cache.CacheDefaults;
+import com.sbiz.cache.utils.StoreManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,73 +14,38 @@ public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
 
 	private String cacheStrategy;
 
+	// Used for debuging purposes
 	private boolean printInternalsDebug = DEFAULT_PRINT_INTERNALS_DEBUG;
-
-	// Is disk caching enabled?
-    private boolean diskEnabled = DEFAULT_DISK_ENABLED;
-    
-    // Disk location of the cache
-    private String diskLocation = DEFAULT_DISK_LOCATION;
-
-    // Max Size of the cache
-    private int maxSize = DEFAULT_MAX_SIZE;
 
     // If key exists should put() method update the value?
     private boolean updateExisting = DEFAULT_UPDATE_EXISTING;
 
 	protected int size;
 
+	protected StoreManager<K, V> store;
+
 	protected ACache() {
 		size = 0;
-		initialize();
+		store = new StoreManager<K, V>();
+		initializeStrategy();
 	}
 
 	protected ACache(CacheBuilder builder) {
 		this();
-		setDiskLocation(builder.getDiskLocation());
-        setDiskEnabled(builder.isDiskEnabled());
-        setMaxSize(builder.getMaxSize());
+		store.setDiskLocation(builder.getDiskLocation());
+        store.setDiskEnabled(builder.isDiskEnabled());
+		store.setMaxDiskSize(builder.getMaxDiskSize());
+		store.setMaxMemorySize(builder.getMaxMemorySize());
 		setUpdateExisting(builder.isUpdateExisting());
 		setPrintInternalsDebug(builder.isPrintInternalsDebug());
-
 	}
 
 	public abstract String internals();
 	
-	protected abstract void initialize();
+	protected abstract void initializeStrategy();
 
 	public int size() {
 		return size;
-	}
-
-	public boolean isDiskEnabled () {
-        return diskEnabled;
-    }
-    
-    public void setDiskEnabled(boolean diskEnabled) {
-        this.diskEnabled = diskEnabled;
-    }
-
-    public String getDiskLocation () {
-        return diskLocation;
-    }
-
-    public void setDiskLocation(String diskLocation) {
-        this.diskLocation = diskLocation;
-    }
-
-	/**
-	 * @return the maxSize
-	 */
-	public int getMaxSize() {
-		return maxSize;
-	}
-
-	/**
-	 * @param maxSize the maxSize to set
-	 */
-	public void setMaxSize(int maxSize) {
-		this.maxSize = maxSize;
 	}
 
 	/**
@@ -111,11 +77,8 @@ public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
 	}
 		
     public String toString() {
-		String fillRatio = String.format("%3d",(int)((size() * 100.0f)/maxSize));
-		StringBuilder sb = new StringBuilder("Cache ").append(cacheStrategy)
-					.append("[").append(hashCode()).append("]")
-					.append(" Fill ratio: [").append(fillRatio).append("]");
-
+		StringBuilder sb = new StringBuilder(cacheStrategy).append("-Cache[")
+					.append(hashCode()).append("]");
         return sb.toString();
 	}
 
@@ -136,8 +99,13 @@ public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
 	public void put(K key, V value) {
 		logger.debug("{} | Object added", this.toString());
 		if (isPrintInternalsDebug())
-			logger.debug("    {}", internals());
+			logger.debug("{}", internals());
 	} 
+
+	public int getMaxSize() {
+		return store.getMaxMemorySize() + 
+			(store.isDiskEnabled() ? store.getMaxDiskSize() : 0);
+	}
 
 }
     

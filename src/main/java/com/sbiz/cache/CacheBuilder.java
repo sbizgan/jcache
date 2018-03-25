@@ -7,7 +7,8 @@ public class CacheBuilder implements CacheDefaults {
 
     private boolean diskEnabled = DEFAULT_DISK_ENABLED;
     private String diskLocation = DEFAULT_DISK_LOCATION;
-    private int maxSize = DEFAULT_MAX_SIZE;
+    private int maxDiskSize = DEFAULT_MAX_SIZE_DISK;
+    private int maxMemorySize = DEFAULT_MAX_SIZE_DISK;
     private boolean updateExisting = DEFAULT_UPDATE_EXISTING;
     private boolean printInternalsDebug = DEFAULT_PRINT_INTERNALS_DEBUG;
 
@@ -26,10 +27,24 @@ public class CacheBuilder implements CacheDefaults {
         return this;
     }
 
-    public CacheBuilder maxSize(int size) throws Exception {
+    /**
+     * Set the maximum number of objects stored on disk. This will enable by default disk caching.
+     */
+    public CacheBuilder diskSize(int size) throws Exception {
         if (size < 1)
-            throw new Exception("Max size for cache cannot be less than 1!");
-        this.maxSize = size;
+            throw new Exception("Max size for disk cannot be less than 1!");
+        this.maxDiskSize = size;
+        this.diskEnabled = true;
+        return this;
+    }
+
+    /**
+     * Set the maxim number of objects stored in memory
+     */
+    public CacheBuilder memorySize(int size) throws Exception {
+        if (size < 1)
+            throw new Exception("Max size for memory cannot be less than 1!");
+        this.maxMemorySize = size;
         return this;
     }
 
@@ -57,12 +72,18 @@ public class CacheBuilder implements CacheDefaults {
 	}
 
     /**
-	 * @return the maxSize
+	 * @return the maxDiskSize
 	 */
-	public int getMaxSize() {
-		return maxSize;
+	public int getMaxDiskSize() {
+		return maxDiskSize;
 	}
 
+    /**
+	 * @return the maxMemorySize
+	 */
+	public int getMaxMemorySize() {
+		return maxMemorySize;
+	}
 	public boolean isUpdateExisting() {
 		return updateExisting;
 	}

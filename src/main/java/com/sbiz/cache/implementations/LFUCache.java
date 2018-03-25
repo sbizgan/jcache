@@ -6,9 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.sbiz.cache.CacheBuilder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Least-frequently used (LFU) implementation of a cache
  * Sources if inspiration:
@@ -39,8 +36,8 @@ public class LFUCache<K, V> extends ACache<K, V> {
 		super(builder);
 	}
 
-	protected void initialize() {
-		setCacheStrategy("LFU");
+	protected void initializeStrategy() {
+		setCacheStrategy(LFU);
 		frequencies = new ConcurrentHashMap<Integer, HashSet<K>>();
 		cache = new ConcurrentHashMap<K, Node<K, V>>();
 		logger.debug("{} | Cache initialized", this);

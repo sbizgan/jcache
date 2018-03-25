@@ -25,7 +25,7 @@ class LFUCacheTest {
     @DisplayName("Test LRUCache with size smaller than 1")
     void smallSizeTest() {
         try {
-            new LFUCache<String, String>(new CacheBuilder().maxSize(0));
+            new LFUCache<String, String>(new CacheBuilder().memorySize(0));
         } catch (Exception e) {
             assert(true);
             return;
@@ -38,7 +38,7 @@ class LFUCacheTest {
     void sizeOneTest() {
         Cache<String, String> testCache = null;
         try {
-            testCache = new LFUCache<String, String>(new CacheBuilder().maxSize(1));
+            testCache = new LFUCache<String, String>(new CacheBuilder().memorySize(1));
         } catch (Exception e) {
             fail("Failed to create cache", e);
         }
@@ -52,7 +52,7 @@ class LFUCacheTest {
     void basicTest() {
         LFUCache<String, String> cache = null;
 		try {
-			cache = new LFUCache<String, String>(new CacheBuilder().maxSize(3).printInternalsInDebug(true));
+			cache = new LFUCache<String, String>(new CacheBuilder().memorySize(3).printInternalsInDebug(true));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			fail(e.getMessage());

@@ -26,7 +26,7 @@ class LRUCacheTest {
     @DisplayName("Test LRUCache with size smaller than 1")
     void smallSizeTest() {
         try {
-            new LRUCache<String, String>(new CacheBuilder().maxSize(0));
+            new LRUCache<String, String>(new CacheBuilder().memorySize(0));
         } catch (Exception e) {
             assert(true);
             return;
@@ -39,7 +39,7 @@ class LRUCacheTest {
     void sizeOneTest() {
         Cache<String, String> testCache = null;
         try {
-            testCache = new LRUCache<String, String>(new CacheBuilder().maxSize(1));
+            testCache = new LRUCache<String, String>(new CacheBuilder().memorySize(1));
         } catch (Exception e) {
             fail("Failed to create cache", e);
         }
@@ -49,11 +49,11 @@ class LRUCacheTest {
     }
 
     @Test
-    @DisplayName("Some basic tests")
+    @DisplayName("Basic test with memory cache only")
     void basicTest() {
         LRUCache<String, String> cache = null;
 		try {
-			cache = new LRUCache<String, String>(new CacheBuilder().maxSize(3).printInternalsInDebug(true));
+			cache = new LRUCache<String, String>(new CacheBuilder().memorySize(3).printInternalsInDebug(true));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			fail(e.getMessage());
@@ -68,4 +68,27 @@ class LRUCacheTest {
         assertTrue(true);
     }
 
+    @Test
+    void basicTwoLevelTest() {
+        LRUCache<String, String> cache = null;
+		try {
+			cache = new LRUCache<String, String>(
+                    new CacheBuilder()
+                            .memorySize(3)
+                            .diskSize(10)
+                            .printInternalsInDebug(true));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			fail(e.getMessage());
+        }
+        
+        //TODO What will happen if we set Max size -1 or less than the size? test
+        cache.put("A", "Bim");
+        cache.put("B", "Bam");
+        cache.get("A");
+        cache.put("C", "Bum");
+        cache.put("D", "Badabum");
+        cache.put("E", "Rapatam tap tap");
+        assertTrue(true);
+    }
 }

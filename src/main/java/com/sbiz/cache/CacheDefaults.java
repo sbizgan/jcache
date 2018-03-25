@@ -3,10 +3,15 @@ package com.sbiz.cache;
 public interface CacheDefaults {
     
     /**
-     * Default max memory size
+     * Default max number of objects to store in memory
      */
-    public static final int DEFAULT_MAX_SIZE = 100;
+    public static final int DEFAULT_MAX_SIZE_MEMORY = 100;
 
+    /**
+     * Default max number of objects to store on disk
+     */
+    public static final int DEFAULT_MAX_SIZE_DISK = 1000;
+    
     /**
      * Set user home as default cache location
      */
@@ -18,11 +23,6 @@ public interface CacheDefaults {
     public static final boolean DEFAULT_DISK_ENABLED = false;
 
     /**
-     * The max size of the disk cache
-     */
-    public static final int DEFAULT_MEMORY_MAXSIZE = 256;
-
-    /**
      * If for a key there is already a value stored in the cache 
      * by default we will update the existing value
      */
@@ -32,5 +32,9 @@ public interface CacheDefaults {
      * For debug purposes. Set as true for printing details on storead information
      */
     public static final boolean DEFAULT_PRINT_INTERNALS_DEBUG = false;
-    
+
+    public static final String LRU = "LRU";
+
+    public static final String LFU = "LFU";
+
 }

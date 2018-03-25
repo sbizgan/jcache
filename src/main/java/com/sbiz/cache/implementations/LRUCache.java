@@ -3,6 +3,7 @@ package com.sbiz.cache.implementations;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.sbiz.cache.CacheBuilder;
+import com.sbiz.cache.utils.CacheEntry;
 
 /**
  * Least-recently used (LRU) implementation of a cache
@@ -16,13 +17,13 @@ public class LRUCache<K, V> extends ACache<K, V> {
         Node<Key, Value> previous;
         Node<Key, Value> next;
         Key key;
-        Value value;
+        CacheEntry<Key, Value> cacheEntry;
 
-        public Node(Node<Key, Value> previous, Node<Key, Value> next, Key key, Value value) {
+        public Node(Node<Key, Value> previous, Node<Key, Value> next, Key key, CacheEntry<Key, Value> cacheEntry) {
+            this.cacheEntry = cacheEntry;
             this.previous = previous;
             this.next = next;
             this.key = key;
-            this.value = value;
         }
     }
 
@@ -37,9 +38,9 @@ public class LRUCache<K, V> extends ACache<K, V> {
     public LRUCache(CacheBuilder builder) {
         super(builder);
     }
-    
-    protected void initialize() {
-        setCacheStrategy("LRU");
+
+    protected void initializeStrategy() {
+        setCacheStrategy(LRU);
         leastRecentlyUsed = new Node<K, V>(null, null, null, null);
         mostRecentlyUsed = leastRecentlyUsed;
         cache = new ConcurrentHashMap<K, Node<K, V>>();
@@ -47,14 +48,20 @@ public class LRUCache<K, V> extends ACache<K, V> {
     }
 
     public void put(K key, V value) {
+
+        //TODO delete also from store
+
         if (cache.containsKey(key)) {
             if (isUpdateExisting())
-                cache.get(key).value = value;
+                cache.get(key).cacheEntry.updateValue(value);
             return;
         }
 
+        // Create a new cache Entry
+        CacheEntry<K, V> newEntry = new CacheEntry<K, V>(key, value, store);
+
         // Put the new node at the right-most end of the linked-list
-        Node<K, V> myNode = new Node<K, V>(mostRecentlyUsed, null, key, value);
+        Node<K, V> myNode = new Node<K, V>(mostRecentlyUsed, null, key, newEntry);
         mostRecentlyUsed.next = myNode;
         cache.put(key, myNode);
         mostRecentlyUsed = myNode;
@@ -62,6 +69,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
         // Delete the left-most entry and update the LRU pointer
         if (size == getMaxSize()) {
             cache.remove(leastRecentlyUsed.key);
+            leastRecentlyUsed.cacheEntry.removeFromStore();
             leastRecentlyUsed = leastRecentlyUsed.next;
             leastRecentlyUsed.previous = null;
         }
@@ -84,7 +92,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
         }
         // If MRU leave the list as it is
         else if (cachedNode.key == mostRecentlyUsed.key) {
-            return mostRecentlyUsed.value;
+            return mostRecentlyUsed.cacheEntry.getValue();
         }
 
         // Get the next and previous nodes
@@ -109,7 +117,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
         mostRecentlyUsed = cachedNode;
         mostRecentlyUsed.next = null;
 
-        return cachedNode.value;
+        return cachedNode.cacheEntry.getValue();
     }
 
     public boolean containsKey(K key) {
@@ -117,6 +125,8 @@ public class LRUCache<K, V> extends ACache<K, V> {
     }
 
     public V remove(K key) {
+
+        //TODO also remove from store
 
         Node<K, V> currentNode = cache.get(key);
         if (currentNode == null) {
@@ -130,15 +140,13 @@ public class LRUCache<K, V> extends ACache<K, V> {
         // Remove the object from the cache
         cache.remove(key);
 
-        // Update internal linked list
-
         // If MRU
         if (currentNode.key == mostRecentlyUsed.key) {
             previousNode.next = null;
             currentNode.previous = null;
             mostRecentlyUsed = previousNode;
             size--;
-            return currentNode.value;
+            return currentNode.cacheEntry.getValue();
         }
 
         // If LRU
@@ -147,7 +155,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
             currentNode.next = null;
             leastRecentlyUsed = nextNode;
             size--;
-            return currentNode.value;
+            return currentNode.cacheEntry.getValue();
         }
 
         // If middle
@@ -156,7 +164,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
         currentNode.next = null;
         currentNode.previous = null;
         size--;
-        return currentNode.value;
+        return currentNode.cacheEntry.getValue();
     }
 
     public boolean isEmpty() {
@@ -166,6 +174,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
     public void clear() {
         //clear map
         cache.clear();
+        store.clear();
 
         //reinitilize internals 
         leastRecentlyUsed = new Node<K, V>(null, null, null, null);
@@ -173,16 +182,16 @@ public class LRUCache<K, V> extends ACache<K, V> {
         size = 0;
     }
 
-	@Override
-	public String internals() {
+    @Override
+    public String internals() {
         StringBuffer sb = new StringBuffer();
         Node<K, V> current = leastRecentlyUsed;
         sb.append(current.key);
-        while(!current.equals(mostRecentlyUsed)) {
+        while (!current.equals(mostRecentlyUsed)) {
             sb.append(">").append(current.next.key);
             current = current.next;
         }
         return sb.toString();
-	}
+    }
 
 }

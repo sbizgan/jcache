@@ -29,15 +29,19 @@ public abstract class ACache<K, V extends Serializable> implements Cache<K, V>, 
 	protected ACache() {
 		size = 0;
 		store = new StoreManager<K, V>();
+		store.build();
 		initializeStrategy();
 	}
 
 	protected ACache(CacheBuilder builder) {
-		this();
+		size = 0;
+		store = new StoreManager<K, V>();
+		initializeStrategy();
 		store.setDiskLocation(builder.getDiskLocation());
         store.setDiskEnabled(builder.isDiskEnabled());
 		store.setMaxDiskSize(builder.getMaxDiskSize());
 		store.setMaxMemorySize(builder.getMaxMemorySize());
+		store.build();
 		setUpdateExisting(builder.isUpdateExisting());
 		setPrintInternalsDebug(builder.isPrintInternalsDebug());
 	}

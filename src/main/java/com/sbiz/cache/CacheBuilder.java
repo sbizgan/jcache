@@ -21,8 +21,6 @@ public class CacheBuilder implements CacheDefaults {
     //This by default will enable diskCaching
     public CacheBuilder diskLocation(String diskLocation) throws Exception {
         this.diskEnabled = true;
-
-        //TODO Add filepath verifications here
         this.diskLocation = diskLocation;
         return this;
     }

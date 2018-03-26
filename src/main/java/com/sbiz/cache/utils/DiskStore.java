@@ -7,6 +7,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import com.sbiz.cache.CacheDefaults;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,17 +27,24 @@ public class DiskStore<K, V extends Serializable> {
 
 	private int size;
 
-	private String diskLocation;
+	private long diskSize;
 
-	public DiskStore(String diskLocation) {
-		this.diskLocation = diskLocation + "/jcache/";
+    // Disk location of the cache
+    private String diskLocation;
+
+	public DiskStore() {
 		this.size = 0;
+		this.diskSize = 0;
+		setDiskLocation(CacheDefaults.DEFAULT_DISK_LOCATION + File.separator + ".jcache" + File.separator);
 	}
 
 	public void remove(K key) {
 		File fileToRemove = new File(getFileName(key));
-		if (fileToRemove.delete())
+		long fileSize = fileToRemove.length();
+		if (fileToRemove.delete()) {
 			size--;
+			diskSize -= fileSize;
+		}
 	}
 
 	public void add(K key, V value) {
@@ -46,6 +55,7 @@ public class DiskStore<K, V extends Serializable> {
 			FileEntry<V> obj = new FileEntry<V>(value);
 			out.writeObject(obj);
 			out.close();
+			diskSize += file.length();
 			size++;
 		} catch (Exception e) {
 			logger.error("We've got an error writing cache entry to file: {}",
@@ -75,6 +85,16 @@ public class DiskStore<K, V extends Serializable> {
 		return new StringBuilder(diskLocation)
 					.append(String.format("%032d", key.hashCode()))
 					.toString() ;
+	}
+
+	public void setDiskLocation(String diskLocation) {
+		if (diskLocation.lastIndexOf(File.separator) != (diskLocation.length()-1)) 
+			diskLocation += File.separator;
+		this.diskLocation = diskLocation;
+	}
+
+	public void initLocation() {
+		new File(diskLocation).mkdirs();
 	}
 
 }

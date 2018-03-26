@@ -8,8 +8,8 @@ import com.sbiz.cache.CacheDefaults;
 public class StoreManager<K, V extends Serializable>  {
 
     private ConcurrentHashMap<K, V> memoryStore;
-    private DiskStore<K, V> fileStore;
 
+    private DiskStore<K, V> fileStore;
 
     // Max disk size of the cache
     private int maxDiskSize = CacheDefaults.DEFAULT_MAX_SIZE_DISK;
@@ -20,12 +20,10 @@ public class StoreManager<K, V extends Serializable>  {
     // Is disk caching enabled?
     private boolean diskEnabled = CacheDefaults.DEFAULT_DISK_ENABLED;
     
-    // Disk location of the cache
-    private String diskLocation = CacheDefaults.DEFAULT_DISK_LOCATION;
-
     public StoreManager() {
         memoryStore = new ConcurrentHashMap<K, V>();
-        fileStore = new DiskStore<K, V>(diskLocation);
+        if (diskEnabled)
+            fileStore = new DiskStore<K, V>();
     }
 
     /** 
@@ -52,7 +50,7 @@ public class StoreManager<K, V extends Serializable>  {
         } 
         
         // see if disk has space
-        if (fileStore.size() < maxMemorySize) { 
+        if (diskEnabled && fileStore.size() < maxMemorySize) { 
             fileStore.add(key, value);
             return true;
         }
@@ -141,13 +139,10 @@ public class StoreManager<K, V extends Serializable>  {
         this.diskEnabled = diskEnabled;
     }
 
-
-    public String getDiskLocation () {
-        return diskLocation;
-    }
-
     public void setDiskLocation(String diskLocation) {
-        this.diskLocation = diskLocation;
+        if (fileStore == null)
+            fileStore = new DiskStore<K, V>();
+        fileStore.setDiskLocation(diskLocation);
 	}
 
     public String toString() {
@@ -169,6 +164,11 @@ public class StoreManager<K, V extends Serializable>  {
         else
             memoryStore.remove(key);
         return value;
+	}
+
+	public void build() {
+        if (diskEnabled)
+            fileStore.initLocation();
 	}
 
 }

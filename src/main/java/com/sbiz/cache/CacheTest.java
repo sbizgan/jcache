@@ -11,7 +11,7 @@ public class CacheTest {
     public static void main(String[] args) {
         LRUCache<String, String> cache = null;
 		try {
-			cache = new LRUCache<String, String>(new CacheBuilder().memorySize(3).printInternalsInDebug(true));
+			cache = new LRUCache<String, String>(new CacheBuilder().memorySize(3).diskSize(5).printInternalsInDebug(true));
 		} catch (Exception e) {
 			e.printStackTrace();
         }
@@ -23,5 +23,11 @@ public class CacheTest {
         cache.get("A");
         cache.put("C", "Bum");
         cache.put("D", "Badabum");
+        cache.put("A", "Bim");
+        cache.put("B", "Bam");
+        cache.get("A");
+        cache.put("C", "Bum");
+        cache.put("D", "Badabum");
+        cache.put("E", "Rapatam tap tap");
     }
 }

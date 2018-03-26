@@ -1,5 +1,6 @@
 package com.sbiz.cache.implementations;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,9 +12,9 @@ import com.sbiz.cache.CacheBuilder;
  * Sources if inspiration:
  * 	- http://www.javarticles.com/2012/06/lfu-cache.html
  */
-public class LFUCache<K, V> extends ACache<K, V> {
+public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 
-	private class Node<Key, Value> {
+	private class Node<Key, Value extends Serializable> {
 		public final Key key;
 		public Value value;
 		public int frequency;

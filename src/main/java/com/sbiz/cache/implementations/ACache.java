@@ -1,5 +1,7 @@
 package com.sbiz.cache.implementations;
 
+import java.io.Serializable;
+
 import com.sbiz.cache.Cache;
 import com.sbiz.cache.CacheBuilder;
 import com.sbiz.cache.CacheDefaults;
@@ -8,7 +10,7 @@ import com.sbiz.cache.utils.StoreManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ACache<K, V> implements Cache<K, V>, CacheDefaults {
+public abstract class ACache<K, V extends Serializable> implements Cache<K, V>, CacheDefaults {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 

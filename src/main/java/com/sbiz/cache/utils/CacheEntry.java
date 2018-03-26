@@ -1,6 +1,8 @@
 package com.sbiz.cache.utils;
 
-public class CacheEntry<K, V> {
+import java.io.Serializable;
+
+public class CacheEntry<K, V extends Serializable> {
 
     private K key;
     private boolean diskStored;
@@ -8,13 +10,13 @@ public class CacheEntry<K, V> {
 
 
     /**
-     * Each cached entry has a key and the information regarding where is stored (memory or disk)
+     * Each cached entry has a key and the information regarding where is stored (memory or disk).
+     * The manager will also decide where to store the value.
      */
     public CacheEntry(K key, V value, StoreManager<K, V> manager) {
         this.key = key;
         this.manager = manager;
         diskStored = manager.put(key, value);
-
     }
 
     public void updateValue(V value) {
@@ -35,8 +37,12 @@ public class CacheEntry<K, V> {
         manager.switchStore(key, diskStored);
     }
 
-    public void removeFromStore() {
-        manager.remove(key, diskStored);
+    public V removeFromStore() {
+        return manager.remove(key, diskStored);
+    }
+
+    public boolean isDiskStored() {
+        return diskStored;
     }
 
 }

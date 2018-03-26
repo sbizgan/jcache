@@ -1,5 +1,6 @@
 package com.sbiz.cache.implementations;
 
+import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.sbiz.cache.CacheBuilder;
@@ -11,9 +12,9 @@ import com.sbiz.cache.utils.CacheEntry;
  *  - https://stackoverflow.com/a/23772103/1531903
  *  - https://commons.apache.org/proper/commons-collections/apidocs/src-html/org/apache/commons/collections4/map/LRUMap.html
  */
-public class LRUCache<K, V> extends ACache<K, V> {
+public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
 
-    private class Node<Key, Value> {
+    private class Node<Key, Value extends Serializable> {
         Node<Key, Value> previous;
         Node<Key, Value> next;
         Key key;
@@ -57,7 +58,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
             return;
         }
 
-        // Create a new cache Entry
+        // Create a new cache Entry. This will add the value to either memory or disk depending on space availabilty
         CacheEntry<K, V> newEntry = new CacheEntry<K, V>(key, value, store);
 
         // Put the new node at the right-most end of the linked-list
@@ -146,7 +147,8 @@ public class LRUCache<K, V> extends ACache<K, V> {
             currentNode.previous = null;
             mostRecentlyUsed = previousNode;
             size--;
-            return currentNode.cacheEntry.getValue();
+            return currentNode.cacheEntry.removeFromStore();
+
         }
 
         // If LRU
@@ -155,7 +157,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
             currentNode.next = null;
             leastRecentlyUsed = nextNode;
             size--;
-            return currentNode.cacheEntry.getValue();
+            return currentNode.cacheEntry.removeFromStore();
         }
 
         // If middle
@@ -164,7 +166,7 @@ public class LRUCache<K, V> extends ACache<K, V> {
         currentNode.next = null;
         currentNode.previous = null;
         size--;
-        return currentNode.cacheEntry.getValue();
+        return currentNode.cacheEntry.removeFromStore();
     }
 
     public boolean isEmpty() {
@@ -186,9 +188,15 @@ public class LRUCache<K, V> extends ACache<K, V> {
     public String internals() {
         StringBuffer sb = new StringBuffer();
         Node<K, V> current = leastRecentlyUsed;
-        sb.append(current.key);
+        sb.append(current.key)
+            .append("[")
+            .append(current.cacheEntry.isDiskStored() ? "D": "M")
+            .append("]");
         while (!current.equals(mostRecentlyUsed)) {
-            sb.append(">").append(current.next.key);
+            sb.append("-").append(current.next.key) 
+                .append("[")
+                .append(current.cacheEntry.isDiskStored()? "D": "M")
+                .append("]");
             current = current.next;
         }
         return sb.toString();

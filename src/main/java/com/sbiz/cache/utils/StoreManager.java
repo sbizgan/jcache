@@ -1,10 +1,11 @@
 package com.sbiz.cache.utils;
 
+import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.sbiz.cache.CacheDefaults;
 
-public class StoreManager<K, V>  {
+public class StoreManager<K, V extends Serializable>  {
 
     private ConcurrentHashMap<K, V> memoryStore;
     private DiskStore<K, V> fileStore;
@@ -45,18 +46,21 @@ public class StoreManager<K, V>  {
 	public boolean put(K key, V value) {
         
         // see if memory has space
-        if (true) { //TODO
+        if (memoryStore.size() < maxMemorySize) {
             memoryStore.put(key, value);
             return false;
         } 
-        // see if disk memory is full
-        if (true) { //TODO
-            fileStore.remove(key);
+        
+        // see if disk has space
+        if (fileStore.size() < maxMemorySize) { 
+            fileStore.add(key, value);
+            return true;
         }
 
-        //add to file store
-        fileStore.add(key, value);
+        // no space! remove entry from 
+        // TODO should we delete first? based on strategy?
 
+        // add to file store
         //TODO evict object if 
         return true;         
 
@@ -74,7 +78,10 @@ public class StoreManager<K, V>  {
      * from Memory to Disk. This will return <code>true</code> as will be stored in diskStored variable
      */
 	private boolean moveToDisk(K key) {
-		return true;
+        V value = memoryStore.get(key);
+        memoryStore.remove(key);
+        fileStore.add(key, value);
+        return true;
 	}
 
     /**
@@ -82,15 +89,20 @@ public class StoreManager<K, V>  {
      * from Disk to Memory. This will return <code>false</code> as will be stored in diskStored variable
      */
 	private boolean moveInMemory(K key) {
-		return false;
+        V value = fileStore.getValue(key);
+        fileStore.remove(key);
+        memoryStore.put(key, value);
+        return false;
 	}
 
+    //TODO
 	public void updateValue(K key, V value, boolean diskStored) {
-        //TODO
+        
 	}
 
+    //TODO
 	public void clear() {
-        //TODO
+        
 	}
 
 	/**
@@ -150,11 +162,13 @@ public class StoreManager<K, V>  {
         return sb.toString();
     }
 
-	public void remove(K key, boolean diskStored) {
+	public V remove(K key, boolean diskStored) {
+        V value = getValue(key, diskStored);
         if (diskStored)
             fileStore.remove(key);
         else
             memoryStore.remove(key);
+        return value;
 	}
 
 }

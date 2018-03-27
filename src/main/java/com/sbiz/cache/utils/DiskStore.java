@@ -52,8 +52,7 @@ public class DiskStore<K, V extends Serializable> {
 			File file = new File(getFileName(key));
 			FileOutputStream fos = new FileOutputStream(file);
 			ObjectOutputStream out = new ObjectOutputStream(fos);
-			FileEntry<V> obj = new FileEntry<V>(value);
-			out.writeObject(obj);
+			out.writeObject(value);
 			out.close();
 			diskSize += file.length();
 			size++;
@@ -64,13 +63,15 @@ public class DiskStore<K, V extends Serializable> {
 		}
 	}
 
+
 	public V getValue(K key) {
 		try {
 			FileInputStream file = new FileInputStream(new File(getFileName(key)));
 			ObjectInputStream in = new ObjectInputStream(file);
-			FileEntry<V> obj = (FileEntry<V>)in.readObject();
+			@SuppressWarnings("unchecked") 
+				V value = (V)in.readObject();
 			in.close();
-			return ((FileEntry<V>)obj).value;
+			return value;
 		} catch (Exception e) {
 			logger.error("We've got an error writing cache entry to file: {}", e.getLocalizedMessage());
 		}
@@ -83,7 +84,7 @@ public class DiskStore<K, V extends Serializable> {
 	
 	private String getFileName(K key) {
 		return new StringBuilder(diskLocation)
-					.append(String.format("%032d", key.hashCode()))
+					.append(key.hashCode())
 					.toString() ;
 	}
 
@@ -95,6 +96,10 @@ public class DiskStore<K, V extends Serializable> {
 
 	public void initLocation() {
 		new File(diskLocation).mkdirs();
+	}
+
+	public long getDiskSize() {
+		return diskSize;
 	}
 
 }

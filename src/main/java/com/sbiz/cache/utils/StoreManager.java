@@ -57,6 +57,7 @@ public class StoreManager<K, V extends Serializable>  {
 
         // no space! remove entry from 
         // TODO should we delete first? based on strategy?
+        
 
         // add to file store
         //TODO evict object if 
@@ -148,12 +149,15 @@ public class StoreManager<K, V extends Serializable>  {
     public String toString() {
         String memoryFillRatio = String.format("%3d",(int)((memoryStore.size() * 100.0f)/maxMemorySize));
         String diskFillRatio = String.format("%3d",(int)((fileStore.size() * 100.0f)/maxDiskSize));
+        String diskSize = String.format("%d MB",(int)(fileStore.getDiskSize()/1024));
         
         StringBuilder sb = new StringBuilder();
         
-        sb.append("[M: ").append(memoryFillRatio).append("%]");
-        if (diskEnabled)
-            sb.append(" [D: ").append(diskFillRatio).append("%]");
+        sb.append("[Memory: ").append(memoryFillRatio).append("%]");
+        if (diskEnabled) {
+            sb.append(" [DiskObjects: ").append(diskFillRatio).append("%]");
+            sb.append(" [DiskSize: ").append(diskSize).append("]");
+        }
         return sb.toString();
     }
 

@@ -5,8 +5,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.sbiz.cache.CacheDefaults;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class StoreManager<K, V extends Serializable>  {
 
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    
     private ConcurrentHashMap<K, V> memoryStore;
 
     private DiskStore<K, V> fileStore;
@@ -43,7 +48,7 @@ public class StoreManager<K, V extends Serializable>  {
      */
 	public boolean put(K key, V value) {
         
-        // see if memory has space
+        // see first if memory has space
         if (memoryStore.size() < maxMemorySize) {
             memoryStore.put(key, value);
             return false;
@@ -55,13 +60,9 @@ public class StoreManager<K, V extends Serializable>  {
             return true;
         }
 
-        // no space! remove entry from 
-        // TODO should we delete first? based on strategy?
-        
-
-        // add to file store
-        //TODO evict object if 
-        return true;         
+        // Space should be available this point should not be reached
+        logger.error("No space available to add entires. Something wen bad! Please report this bug!");
+        throw new SecurityException("No room to add entries. Something went bad! Please report this bug!");
 
 	}
 
@@ -173,6 +174,10 @@ public class StoreManager<K, V extends Serializable>  {
 	public void build() {
         if (diskEnabled)
             fileStore.initLocation();
+	}
+
+	public boolean isMemoryFull() {
+		return memoryStore.size() == maxMemorySize;
 	}
 
 }

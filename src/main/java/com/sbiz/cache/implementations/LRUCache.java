@@ -29,9 +29,10 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
     }
 
     private ConcurrentHashMap<K, Node<K, V>> cache;
-    private Node<K, V> leastRecentlyUsed;
-    private Node<K, V> mostRecentlyUsed;
-
+    private Node<K, V> leastRecently;
+    private Node<K, V> mostRecently;
+    private Node<K, V> leastRecentlyMemory;
+    
     public LRUCache() {
         super();
     }
@@ -42,15 +43,16 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
 
     protected void initializeStrategy() {
         setCacheStrategy(LRU);
-        leastRecentlyUsed = new Node<K, V>(null, null, null, null);
-        mostRecentlyUsed = leastRecentlyUsed;
+        leastRecently = new Node<K, V>(null, null, null, null);
+        mostRecently = leastRecently;
+        leastRecentlyMemory = leastRecently;
         cache = new ConcurrentHashMap<K, Node<K, V>>();
-        logger.debug("{} | Cache initialized", this);
+        logger.debug("{} | {} Cache initialized", this, cacheStrategy);
     }
 
     public void put(K key, V value) {
 
-        //TODO delete also from store
+        logger.debug("{} | Adding object with key {} ", this, key);
 
         if (cache.containsKey(key)) {
             if (isUpdateExisting())
@@ -58,67 +60,133 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
             return;
         }
 
+        // Based on LRU strategy new items should be most recent and stored in memory
+        // Move the least recent item from memory to disk
+        demoteLeastRecentMemory();
+
+        // Now make sure we have space for the new value
+
+        // Delete the left-most entry and update the LRU pointer
+        if (size == getMaxSize()) {
+            // Remove from cache
+            cache.remove(leastRecently.key);
+
+            // Remove value from store
+            leastRecently.cacheEntry.removeFromStore();
+            leastRecently = leastRecently.next;
+            leastRecently.previous = null;
+
+            size--;
+        }
+        
         // Create a new cache Entry. This will add the value to either memory or disk depending on space availabilty
         CacheEntry<K, V> newEntry = new CacheEntry<K, V>(key, value, store);
 
         // Put the new node at the right-most end of the linked-list
-        Node<K, V> myNode = new Node<K, V>(mostRecentlyUsed, null, key, newEntry);
-        mostRecentlyUsed.next = myNode;
+        Node<K, V> myNode = new Node<K, V>(mostRecently, null, key, newEntry);
+        mostRecently.next = myNode;
         cache.put(key, myNode);
-        mostRecentlyUsed = myNode;
+        mostRecently = myNode;
 
-        // Delete the left-most entry and update the LRU pointer
-        if (size == getMaxSize()) {
-            cache.remove(leastRecentlyUsed.key);
-            leastRecentlyUsed.cacheEntry.removeFromStore();
-            leastRecentlyUsed = leastRecentlyUsed.next;
-            leastRecentlyUsed.previous = null;
+        // Update cache size and for the first added entry update the LRU pointer
+        if (size == 0) {
+            leastRecently = myNode;
+            leastRecentlyMemory = myNode;
+            leastRecentlyMemory.next = myNode;
+            leastRecently.next = myNode;
         }
+        size++;
 
-        // Update cache size, for the first added entry update the LRU pointer
-        else if (size < getMaxSize()) {
-            if (size == 0) {
-                leastRecentlyUsed = myNode;
-            }
-            size++;
-        }
+        if (isPrintInternalsDebug())
+            logger.debug("  Strategy info: {}", internals());
 
-        super.put(key, value);
     }
 
     public V get(K key) {
+
+        logger.debug("{} | Getting object with key {} ", this, key);
+
         Node<K, V> cachedNode = cache.get(key);
         if (cachedNode == null) {
             return null;
         }
+
         // If MRU leave the list as it is
-        else if (cachedNode.key == mostRecentlyUsed.key) {
-            return mostRecentlyUsed.cacheEntry.getValue();
+        if (cachedNode.key.equals(mostRecently.key)) {
+            return mostRecently.cacheEntry.getValue();
         }
 
         // Get the next and previous nodes
         Node<K, V> nextNode = cachedNode.next;
         Node<K, V> previousNode = cachedNode.previous;
 
-        // If at the left-most, we update LRU 
-        if (cachedNode.key == leastRecentlyUsed.key) {
+       
+        if (cachedNode.key.equals(leastRecently.key)) {
+            // If at the left-most, we update LR 
             nextNode.previous = null;
-            leastRecentlyUsed = nextNode;
-        }
-
-        // If we are in the middle, we need to update the items before and after our item
-        else if (cachedNode.key != mostRecentlyUsed.key) {
+            if (leastRecently.equals(leastRecentlyMemory)) 
+                //leastRecently still in memory
+                leastRecentlyMemory = nextNode;
+            else 
+                //update and move to disk leastRecentMemory
+                demoteLeastRecentMemory();
+            leastRecently = nextNode;
+            
+        } else if (!cachedNode.key.equals(mostRecently.key)) {
+            // If we are in the middle, we need to update the items before and after our item            
             previousNode.next = nextNode;
             nextNode.previous = previousNode;
+
+            if (store.isDiskEnabled()) {
+                
+                if (cachedNode.cacheEntry.isDiskStored())
+                    // Node on disk memory?
+                    demoteLeastRecentMemory();
+                else if (cachedNode.key.equals(leastRecentlyMemory.key)) {
+                    // If the leastRecentlyMemory point to the next
+                    leastRecentlyMemory = leastRecentlyMemory.next;
+                }
+
+            }
         }
 
-        // Finally move our item to the MRU
-        cachedNode.previous = mostRecentlyUsed;
-        mostRecentlyUsed.next = cachedNode;
-        mostRecentlyUsed = cachedNode;
-        mostRecentlyUsed.next = null;
+        // Finally move our item to the MR
+        cachedNode.previous = mostRecently;
+        mostRecently.next = cachedNode;
+        mostRecently = cachedNode;
+        mostRecently.next = null;
+
+        //if mostRecently was on disk -> switch to memory
+        if (mostRecently.cacheEntry.isDiskStored())
+            mostRecently.cacheEntry.switchStore();
+
+        if (isPrintInternalsDebug())
+            logger.debug("  Strategy info: {}", internals());
 
         return cachedNode.cacheEntry.getValue();
+
+    }
+
+    // Move least recent object to disk
+    private void demoteLeastRecentMemory() {
+        if (store.isDiskEnabled() && store.isMemoryFull() ) {
+            boolean movedToDisk = leastRecentlyMemory.cacheEntry.switchStore();
+            logger.debug("  {} moved to {}", leastRecentlyMemory.key, (movedToDisk ? "disk" : "memory"));
+            leastRecentlyMemory = leastRecentlyMemory.next;
+        }
+    }
+
+    // Move least recent object to disk
+    private void promoteLeastRecentMemory() {
+        if (store.isDiskEnabled()) {
+            Node<K, V> prevNode = leastRecentlyMemory.previous;
+            // see if we leastRecentlyMemory is last and if previous is diskStored
+            if (prevNode != null && prevNode.cacheEntry.isDiskStored()) {
+                boolean moveToMemory = prevNode.cacheEntry.switchStore();
+                logger.debug("  {} moved to {}", leastRecentlyMemory.key, (moveToMemory ? "disk" : "memory"));
+                leastRecentlyMemory = prevNode;
+            }
+        }
     }
 
     public boolean containsKey(K key) {
@@ -127,11 +195,12 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
 
     public V remove(K key) {
 
-        //TODO also remove from store
+        //TODO track of least recent memory item
 
         Node<K, V> currentNode = cache.get(key);
+        V valueToReturn = null;
         if (currentNode == null) {
-            return null;
+            return valueToReturn;
         }
 
         // Get the next and previous nodes
@@ -142,25 +211,30 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         cache.remove(key);
 
         // If MRU
-        if (currentNode.key == mostRecentlyUsed.key) {
+        if (currentNode.key.equals(mostRecently.key)) {
             previousNode.next = null;
             currentNode.previous = null;
-            mostRecentlyUsed = previousNode;
+            mostRecently = previousNode;
+            valueToReturn = currentNode.cacheEntry.removeFromStore();
+            promoteLeastRecentMemory();
             size--;
-            return currentNode.cacheEntry.removeFromStore();
-
+            return valueToReturn;
         }
 
         // If LRU
-        if (currentNode.key == leastRecentlyUsed.key) {
+        if (currentNode.key.equals(leastRecently.key)) {
             nextNode.previous = null;
             currentNode.next = null;
-            leastRecentlyUsed = nextNode;
+            if (!leastRecently.cacheEntry.isDiskStored())
+                leastRecentlyMemory = nextNode;
+            leastRecently = nextNode;
+            valueToReturn = currentNode.cacheEntry.removeFromStore();
             size--;
             return currentNode.cacheEntry.removeFromStore();
         }
 
         // If middle
+        // TODO what to do?
         previousNode.next = nextNode;
         nextNode.previous = previousNode;
         currentNode.next = null;
@@ -179,26 +253,29 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         store.clear();
 
         //reinitilize internals 
-        leastRecentlyUsed = new Node<K, V>(null, null, null, null);
-        mostRecentlyUsed = leastRecentlyUsed;
+        leastRecently = new Node<K, V>(null, null, null, null);
+        mostRecently = leastRecently;
+        leastRecentlyMemory = leastRecently;
         size = 0;
     }
 
     @Override
     public String internals() {
-        StringBuffer sb = new StringBuffer();
-        Node<K, V> current = leastRecentlyUsed;
+        StringBuffer sb = new StringBuffer("  Past | ");
+        Node<K, V> current = leastRecently;
         sb.append(current.key)
             .append("[")
             .append(current.cacheEntry.isDiskStored() ? "D": "M")
             .append("]");
-        while (!current.equals(mostRecentlyUsed)) {
-            sb.append("-").append(current.next.key) 
+        while (!current.equals(mostRecently)) {
+            current = current.next;
+            sb.append("-").append(current.key) 
                 .append("[")
                 .append(current.cacheEntry.isDiskStored()? "D": "M")
                 .append("]");
-            current = current.next;
+            
         }
+        sb.append(" | Recent \n  ").append(store.toString());
         return sb.toString();
     }
 

@@ -55,11 +55,9 @@ class LRUCacheTest {
 		try {
 			cache = new LRUCache<String, String>(new CacheBuilder().memorySize(3).printInternalsInDebug(true));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			fail(e.getMessage());
         }
-        
-        //TODO What will happen if we set Max size -1 or less than the size? test
+
         cache.put("A", "Bim");
         cache.put("B", "Bam");
         cache.get("A");
@@ -70,25 +68,25 @@ class LRUCacheTest {
 
     @Test
     void basicTwoLevelTest() {
-        LRUCache<String, String> cache = null;
-		try {
-			cache = new LRUCache<String, String>(
+        LRUCache<String, String> cache = new LRUCache<String, String>(
                     new CacheBuilder()
                             .memorySize(3)
-                            .diskSize(10)
+                            .diskSize(2)
                             .printInternalsInDebug(true));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			fail(e.getMessage());
-        }
         
-        //TODO What will happen if we set Max size -1 or less than the size? test
         cache.put("A", "Bim");
         cache.put("B", "Bam");
         cache.get("A");
         cache.put("C", "Bum");
         cache.put("D", "Badabum");
         cache.put("E", "Rapatam tap tap");
+        cache.get("A");
+        cache.put("F", "This is a test");
+        cache.put("G", "This is a test");
+        cache.get("G");
+        cache.get("E");
+        cache.put("H", "This is a test");
+        cache.put("I", "This is a test");
         assertTrue(true);
     }
 }

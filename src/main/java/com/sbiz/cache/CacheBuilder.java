@@ -19,7 +19,7 @@ public class CacheBuilder implements CacheDefaults {
     }
 
     //This by default will enable diskCaching
-    public CacheBuilder diskLocation(String diskLocation) throws Exception {
+    public CacheBuilder diskLocation(String diskLocation) {
         this.diskEnabled = true;
         this.diskLocation = diskLocation;
         return this;
@@ -28,9 +28,9 @@ public class CacheBuilder implements CacheDefaults {
     /**
      * Set the maximum number of objects stored on disk. This will enable by default disk caching.
      */
-    public CacheBuilder diskSize(int size) throws Exception {
+    public CacheBuilder diskSize(int size) {
         if (size < 1)
-            throw new Exception("Max size for disk cannot be less than 1!");
+            throw new IllegalArgumentException("Max size for disk cannot be less than 1!");
         this.maxDiskSize = size;
         this.diskEnabled = true;
         return this;
@@ -39,9 +39,9 @@ public class CacheBuilder implements CacheDefaults {
     /**
      * Set the maxim number of objects stored in memory
      */
-    public CacheBuilder memorySize(int size) throws Exception {
+    public CacheBuilder memorySize(int size) {
         if (size < 1)
-            throw new Exception("Max size for memory cannot be less than 1!");
+            throw new IllegalArgumentException("Max size for memory cannot be less than 1!");
         this.maxMemorySize = size;
         return this;
     }

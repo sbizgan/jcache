@@ -41,7 +41,7 @@ public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 		setCacheStrategy(LFU);
 		frequencies = new ConcurrentHashMap<Integer, HashSet<K>>();
 		cache = new ConcurrentHashMap<K, Node<K, V>>();
-		logger.debug("{} | Cache initialized", this);
+		logger.debug("{} | {} Cache initialized", this, cacheStrategy);
 	}
 
 	public void put(K key, V value) {

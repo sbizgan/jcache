@@ -14,7 +14,7 @@ public abstract class ACache<K, V extends Serializable> implements Cache<K, V>, 
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-	private String cacheStrategy;
+	protected String cacheStrategy;
 
 	// Used for debuging purposes
 	private boolean printInternalsDebug = DEFAULT_PRINT_INTERNALS_DEBUG;
@@ -83,7 +83,7 @@ public abstract class ACache<K, V extends Serializable> implements Cache<K, V>, 
 	}
 		
     public String toString() {
-		StringBuilder sb = new StringBuilder(cacheStrategy).append("-Cache[")
+		StringBuilder sb = new StringBuilder().append("Cache [")
 					.append(hashCode()).append("]");
         return sb.toString();
 	}
@@ -103,9 +103,8 @@ public abstract class ACache<K, V extends Serializable> implements Cache<K, V>, 
 	}
 
 	public void put(K key, V value) {
-		logger.debug("{} | Object added", this.toString());
 		if (isPrintInternalsDebug())
-			logger.debug("{}", internals());
+			logger.debug("  Strategy info: {}", internals());
 	} 
 
 	public int getMaxSize() {

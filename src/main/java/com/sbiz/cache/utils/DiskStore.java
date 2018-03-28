@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
  * Refrences:
  * - https://www.cacheonix.org/articles/How_to_Cache_a_File_in_Java.htm
  * 	
- * TODO lock this diskLocation (so no other cache can use it)
- * TODO add subdirectories based on yyyyMMdd\hh\mm (keep locations on CacheEntry)
+ * 		TODO lock this diskLocation (so no other cache can use it)
+ * 		TODO add subdirectories based on yyyyMMdd\hh\mm (keep locations on CacheEntry)
  * 		TODO manage empty subfolders when deleting!
  */
 

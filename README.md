@@ -9,8 +9,10 @@ Covered requirements:
 Functionalities that need to be implemented:
  - Locking and cleaning of disk stores (locations)
  - Working with multiple cache instances on the same time
- - Expiration for cahce items
+ - Expiration for cache items
  - Cache configuration using properties file
+ - Investigate keeping generics decoupled from Serializable 
+ - Periodically display fill rate (configurable)
  
 Covered strategies:
  - LRU

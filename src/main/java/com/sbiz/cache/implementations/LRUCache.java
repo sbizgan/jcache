@@ -1,6 +1,7 @@
 package com.sbiz.cache.implementations;
 
 import java.io.Serializable;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.sbiz.cache.CacheBuilder;
@@ -62,6 +63,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
 
         // Based on LRU strategy new items should be most recent and stored in memory
         // Move the least recent item from memory to disk
+        // Always update the stores before removing items
         demoteLeastRecentMemory();
 
         // Now make sure we have space for the new value
@@ -140,7 +142,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
             if (store.isDiskEnabled()) {
                 
                 if (cachedNode.cacheEntry.isDiskStored())
-                    // Node on disk memory?
+                    // Current node on disk memory?
                     demoteLeastRecentMemory();
                 else if (cachedNode.key.equals(leastRecentlyMemory.key)) {
                     // If the leastRecentlyMemory point to the next
@@ -176,14 +178,14 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         }
     }
 
-    // Move least recent object to disk
+    // Move least recent object to memory
     private void promoteLeastRecentMemory() {
         if (store.isDiskEnabled()) {
             Node<K, V> prevNode = leastRecentlyMemory.previous;
-            // see if we leastRecentlyMemory is last and if previous is diskStored
+            // see if leastRecentlyMemory is last and if previous is diskStored
             if (prevNode != null && prevNode.cacheEntry.isDiskStored()) {
                 boolean moveToMemory = prevNode.cacheEntry.switchStore();
-                logger.debug("  {} moved to {}", leastRecentlyMemory.key, (moveToMemory ? "disk" : "memory"));
+                logger.debug("  {} moved to {}", prevNode.key, (moveToMemory ? "disk" : "memory"));
                 leastRecentlyMemory = prevNode;
             }
         }
@@ -194,13 +196,11 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
     }
 
     public V remove(K key) {
-
-        //TODO track of least recent memory item
+        logger.debug("{} | Removing object with key {} ", this, key);
 
         Node<K, V> currentNode = cache.get(key);
-        V valueToReturn = null;
         if (currentNode == null) {
-            return valueToReturn;
+            return null;
         }
 
         // Get the next and previous nodes
@@ -210,37 +210,34 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         // Remove the object from the cache
         cache.remove(key);
 
-        // If MRU
+        // If current node is in memory then promote one from disk (if possible) 
+        if (!currentNode.cacheEntry.isDiskStored())
+            promoteLeastRecentMemory(); 
+
         if (currentNode.key.equals(mostRecently.key)) {
+            // MR
             previousNode.next = null;
             currentNode.previous = null;
             mostRecently = previousNode;
-            valueToReturn = currentNode.cacheEntry.removeFromStore();
-            promoteLeastRecentMemory();
-            size--;
-            return valueToReturn;
-        }
-
-        // If LRU
-        if (currentNode.key.equals(leastRecently.key)) {
+        } else if (currentNode.key.equals(leastRecently.key)) {
+            // LR
             nextNode.previous = null;
             currentNode.next = null;
-            if (!leastRecently.cacheEntry.isDiskStored())
-                leastRecentlyMemory = nextNode;
             leastRecently = nextNode;
-            valueToReturn = currentNode.cacheEntry.removeFromStore();
-            size--;
-            return currentNode.cacheEntry.removeFromStore();
+        } else {
+            // Middle
+            previousNode.next = nextNode;
+            nextNode.previous = previousNode;
+            currentNode.next = null;
+            currentNode.previous = null;
         }
-
-        // If middle
-        // TODO what to do?
-        previousNode.next = nextNode;
-        nextNode.previous = previousNode;
-        currentNode.next = null;
-        currentNode.previous = null;
         size--;
-        return currentNode.cacheEntry.removeFromStore();
+        V removedValue = currentNode.cacheEntry.removeFromStore();
+        
+        if (isPrintInternalsDebug())
+            logger.debug("  Strategy info: {}", internals());
+        
+        return removedValue;
     }
 
     public boolean isEmpty() {
@@ -261,7 +258,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
 
     @Override
     public String internals() {
-        StringBuffer sb = new StringBuffer("  Past | ");
+        StringBuffer sb = new StringBuffer("  Old | ");
         Node<K, V> current = leastRecently;
         sb.append(current.key)
             .append("[")
@@ -273,10 +270,18 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
                 .append("[")
                 .append(current.cacheEntry.isDiskStored()? "D": "M")
                 .append("]");
-            
         }
-        sb.append(" | Recent \n  ").append(store.toString());
+        sb.append(" | New     |   ").append(store.toString());
         return sb.toString();
+    }
+
+    // Method used for unit testing purposes!
+    public boolean isEntryDiskStored(K key) {
+        Node<K, V> foundNode = cache.get(key);
+        if (foundNode == null)
+            throw new NoSuchElementException(key + " not in cache");
+        else  
+            return foundNode.cacheEntry.isDiskStored();
     }
 
 }

@@ -67,6 +67,7 @@ class LRUCacheTest {
     }
 
     @Test
+    @DisplayName("Test moving entries between disk and memory")
     void basicTwoLevelTest() {
         LRUCache<String, String> cache = new LRUCache<String, String>(
                     new CacheBuilder()
@@ -81,12 +82,22 @@ class LRUCacheTest {
         cache.put("D", "Badabum");
         cache.put("E", "Rapatam tap tap");
         cache.get("A");
+
+        //C should be now moved to disk
+        assertTrue(cache.isEntryDiskStored("C"));
+
         cache.put("F", "This is a test");
         cache.put("G", "This is a test");
         cache.get("G");
         cache.get("E");
         cache.put("H", "This is a test");
+        cache.remove("H");
+
+        //F should be now moved to memory
+        assertTrue(cache.isEntryDiskStored("F") == false);
+
         cache.put("I", "This is a test");
-        assertTrue(true);
+        //F should be now moved back to disk
+        assertTrue(cache.isEntryDiskStored("F"));
     }
 }

@@ -9,6 +9,7 @@ public class CacheEntry<K, V extends Serializable> {
 
     private K key;
     private boolean diskStored;
+    private String subFolder;
     private StoreManager<K, V> manager;
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -20,31 +21,44 @@ public class CacheEntry<K, V extends Serializable> {
     public CacheEntry(K key, V value, StoreManager<K, V> manager) {
         this.key = key;
         this.manager = manager;
-        diskStored = manager.put(key, value);
+        
+        // Generate subfolder key only if cache has second level (disk) enabled
+        if (manager.isDiskEnabled())
+            this.subFolder = DiskStore.getNextSubFolder();
+
+        this.diskStored = manager.put(this, value);
+    }
+
+    public String getSubFolder() {
+        return subFolder;
     }
 
     public void updateValue(V value) {
-        manager.updateValue(key, value, diskStored);
+        manager.updateValue(this, value);
+    }
+
+    public K getKey() {
+        return key;
     }
 
     /**
      * Load the value for this cache entry from memory/disk
      */
     public V getValue() {
-        return manager.getValue(key, diskStored);
+        return manager.getValue(this);//key, diskStored);
     }
 
     /**
      * Method for moving this cache entry between memory and disk
      */
     public boolean switchStore() {
-        diskStored = manager.switchStore(key, diskStored);
+        diskStored = manager.switchStore(this);
         return diskStored;
     }
 
     public V removeFromStore() {
         logger.debug("[{}] - removing from store", key);
-        return manager.remove(key, diskStored);
+        return manager.remove(this);
     }
 
     public boolean isDiskStored() {

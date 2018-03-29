@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.sbiz.cache.CacheBuilder;
+import com.sbiz.cache.utils.CacheEntry;
 
 /**
  * Least-frequently used (LFU) implementation of a cache
@@ -15,15 +16,17 @@ import com.sbiz.cache.CacheBuilder;
 public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 
 	private class Node<Key, Value extends Serializable> {
-		public final Key key;
-		public Value value;
+		public CacheEntry<Key, Value> cacheEntry;
 		public int frequency;
 
-		public Node(Key key, Value value, int frequency) {
-			this.key = key;
-			this.value = value;
+		public Node(CacheEntry<Key, Value> cacheEntry, int frequency) {
+			this.cacheEntry = cacheEntry; 
 			this.frequency = frequency;
 		}
+
+		public Key getKey() {
+            return cacheEntry.getKey();
+        }
 	}
 
 	private ConcurrentHashMap<K, Node<K, V>> cache;
@@ -47,7 +50,7 @@ public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 	public void put(K key, V value) {
 		if (cache.containsKey(key)) {
 			if (isUpdateExisting())
-				cache.get(key).value = value;
+					cache.get(key).cacheEntry.updateValue(value);
 			return;
 		}
 
@@ -56,24 +59,31 @@ public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 		if (leastFrequent == null)
 			leastFrequent = new HashSet<K>();
 
-		leastFrequent.add(key);
-
 		if (size == getMaxSize()) {
 			doEviction();
 		}
 
+		leastFrequent.add(key);
+
 		frequencies.put(0, leastFrequent);
-		Node<K, V> newNode = new Node<K, V>(key, value, 0);
+		
+		CacheEntry<K, V> newEntry = new CacheEntry<K, V>(key, value, store);
+
+		Node<K, V> newNode = new Node<K, V>(newEntry, 0);
 		cache.put(key, newNode);
 		size++;
 
 		super.put(key, value);
 	}
 
+	// O(N) complexity comes from this method
+	// Worst case scenario all cached items are all the same freqeuncy 
+	// so we have to go through all frequencies
 	private void doEviction() {
-		// make some room for new node
+		// Depeding on the first item found this should be first from disk if memory is full
+		// TODO verify
 
-		// TODO add eviction factor
+		// make some room for new node
 		boolean evicted = false;
 		int index = 0;
 		while (!evicted) {
@@ -81,6 +91,7 @@ public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 			if (!frequency.isEmpty()) {
 				K key = frequency.iterator().next();
 				frequency.remove(key);
+				store.remove(cache.get(key).cacheEntry);
 				cache.remove(key);
 				evicted = true;
 			}
@@ -108,7 +119,7 @@ public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 		// add the current key to the frequency list
 		frequencies.get(cachedNode.frequency).add(key);
 
-		return cachedNode.value;
+		return cachedNode.cacheEntry.getValue();
 	}
 
 	public boolean containsKey(K key) {
@@ -122,8 +133,9 @@ public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 		}
 
 		frequencies.get(cachedNode.frequency).remove(key);
+		store.remove(cache.get(key).cacheEntry);
 		cache.remove(key);
-		return cachedNode.value;
+		return cachedNode.cacheEntry.getValue();
 	}
 
 	public boolean isEmpty() {
@@ -137,6 +149,7 @@ public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 	public void clear() {
 		cache.clear();
 		frequencies.clear();
+		store.clear();
 		size = 0;
 	}
 
@@ -145,7 +158,7 @@ public class LFUCache<K, V extends Serializable> extends ACache<K, V> {
 		StringBuilder sb = new StringBuilder();
 		for (Entry<K, Node<K, V>> entry : cache.entrySet()) {
 			Node<K, V> node = entry.getValue();
-			sb.append(node.key).append("(").append(node.frequency).append(") ");
+			sb.append(node.getKey()).append("(").append(node.frequency).append(") ");
 		}
 		sb.append(" | ");
 		for (Entry<Integer, HashSet<K>> entry : frequencies.entrySet()) {

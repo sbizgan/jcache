@@ -18,18 +18,21 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
     private class Node<Key, Value extends Serializable> {
         Node<Key, Value> previous;
         Node<Key, Value> next;
-        Key key;
         CacheEntry<Key, Value> cacheEntry;
 
-        public Node(Node<Key, Value> previous, Node<Key, Value> next, Key key, CacheEntry<Key, Value> cacheEntry) {
+        public Node(Node<Key, Value> previous, Node<Key, Value> next, CacheEntry<Key, Value> cacheEntry) {
             this.cacheEntry = cacheEntry;
             this.previous = previous;
             this.next = next;
-            this.key = key;
+        }
+
+        public Key getKey() {
+            return cacheEntry.getKey();
         }
     }
 
     private ConcurrentHashMap<K, Node<K, V>> cache;
+
     private Node<K, V> leastRecently;
     private Node<K, V> mostRecently;
     private Node<K, V> leastRecentlyMemory;
@@ -44,7 +47,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
 
     protected void initializeStrategy() {
         setCacheStrategy(LRU);
-        leastRecently = new Node<K, V>(null, null, null, null);
+        leastRecently = new Node<K, V>(null, null, null);
         mostRecently = leastRecently;
         leastRecentlyMemory = leastRecently;
         cache = new ConcurrentHashMap<K, Node<K, V>>();
@@ -71,7 +74,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         // Delete the left-most entry and update the LRU pointer
         if (size == getMaxSize()) {
             // Remove from cache
-            cache.remove(leastRecently.key);
+            cache.remove(leastRecently.getKey());
 
             // Remove value from store
             leastRecently.cacheEntry.removeFromStore();
@@ -85,7 +88,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         CacheEntry<K, V> newEntry = new CacheEntry<K, V>(key, value, store);
 
         // Put the new node at the right-most end of the linked-list
-        Node<K, V> myNode = new Node<K, V>(mostRecently, null, key, newEntry);
+        Node<K, V> myNode = new Node<K, V>(mostRecently, null, newEntry);
         mostRecently.next = myNode;
         cache.put(key, myNode);
         mostRecently = myNode;
@@ -114,7 +117,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         }
 
         // If MRU leave the list as it is
-        if (cachedNode.key.equals(mostRecently.key)) {
+        if (cachedNode.getKey().equals(mostRecently.getKey())) {
             return mostRecently.cacheEntry.getValue();
         }
 
@@ -123,7 +126,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         Node<K, V> previousNode = cachedNode.previous;
 
        
-        if (cachedNode.key.equals(leastRecently.key)) {
+        if (cachedNode.getKey().equals(leastRecently.getKey())) {
             // If at the left-most, we update LR 
             nextNode.previous = null;
             if (leastRecently.equals(leastRecentlyMemory)) 
@@ -134,7 +137,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
                 demoteLeastRecentMemory();
             leastRecently = nextNode;
             
-        } else if (!cachedNode.key.equals(mostRecently.key)) {
+        } else if (!cachedNode.getKey().equals(mostRecently.getKey())) {
             // If we are in the middle, we need to update the items before and after our item            
             previousNode.next = nextNode;
             nextNode.previous = previousNode;
@@ -144,7 +147,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
                 if (cachedNode.cacheEntry.isDiskStored())
                     // Current node on disk memory?
                     demoteLeastRecentMemory();
-                else if (cachedNode.key.equals(leastRecentlyMemory.key)) {
+                else if (cachedNode.getKey().equals(leastRecentlyMemory.getKey())) {
                     // If the leastRecentlyMemory point to the next
                     leastRecentlyMemory = leastRecentlyMemory.next;
                 }
@@ -173,7 +176,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
     private void demoteLeastRecentMemory() {
         if (store.isDiskEnabled() && store.isMemoryFull() ) {
             boolean movedToDisk = leastRecentlyMemory.cacheEntry.switchStore();
-            logger.debug("  {} moved to {}", leastRecentlyMemory.key, (movedToDisk ? "disk" : "memory"));
+            logger.debug("  {} moved to {}", leastRecentlyMemory.getKey(), (movedToDisk ? "disk" : "memory"));
             leastRecentlyMemory = leastRecentlyMemory.next;
         }
     }
@@ -185,7 +188,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
             // see if leastRecentlyMemory is last and if previous is diskStored
             if (prevNode != null && prevNode.cacheEntry.isDiskStored()) {
                 boolean moveToMemory = prevNode.cacheEntry.switchStore();
-                logger.debug("  {} moved to {}", prevNode.key, (moveToMemory ? "disk" : "memory"));
+                logger.debug("  {} moved to {}", prevNode.getKey(), (moveToMemory ? "disk" : "memory"));
                 leastRecentlyMemory = prevNode;
             }
         }
@@ -214,12 +217,12 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         if (!currentNode.cacheEntry.isDiskStored())
             promoteLeastRecentMemory(); 
 
-        if (currentNode.key.equals(mostRecently.key)) {
+        if (currentNode.getKey().equals(mostRecently.getKey())) {
             // MR
             previousNode.next = null;
             currentNode.previous = null;
             mostRecently = previousNode;
-        } else if (currentNode.key.equals(leastRecently.key)) {
+        } else if (currentNode.getKey().equals(leastRecently.getKey())) {
             // LR
             nextNode.previous = null;
             currentNode.next = null;
@@ -250,7 +253,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         store.clear();
 
         //reinitilize internals 
-        leastRecently = new Node<K, V>(null, null, null, null);
+        leastRecently = new Node<K, V>(null, null, null);
         mostRecently = leastRecently;
         leastRecentlyMemory = leastRecently;
         size = 0;
@@ -260,13 +263,13 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
     public String internals() {
         StringBuffer sb = new StringBuffer("  Old | ");
         Node<K, V> current = leastRecently;
-        sb.append(current.key)
+        sb.append(current.getKey())
             .append("[")
             .append(current.cacheEntry.isDiskStored() ? "D": "M")
             .append("]");
         while (!current.equals(mostRecently)) {
             current = current.next;
-            sb.append("-").append(current.key) 
+            sb.append("-").append(current.getKey()) 
                 .append("[")
                 .append(current.cacheEntry.isDiskStored()? "D": "M")
                 .append("]");

@@ -1,5 +1,7 @@
 package com.sbiz.cache;
 
+import java.io.File;
+
 public interface CacheDefaults {
     
     /**
@@ -15,7 +17,8 @@ public interface CacheDefaults {
     /**
      * Set user home as default cache location
      */
-    public static final String DEFAULT_DISK_LOCATION = System.getProperty("user.home");
+    public static final String DEFAULT_DISK_LOCATION = System.getProperty("user.home") 
+                                    + File.separator + ".jcache" + File.separator;
 
     /**
      * By default disk cache is disabled

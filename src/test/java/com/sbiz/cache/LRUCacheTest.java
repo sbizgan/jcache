@@ -91,6 +91,8 @@ class LRUCacheTest {
         cache.get("G");
         cache.get("E");
         cache.put("H", "This is a test");
+        
+        //Remove from memory
         cache.remove("H");
 
         //F should be now moved to memory
@@ -99,5 +101,10 @@ class LRUCacheTest {
         cache.put("I", "This is a test");
         //F should be now moved back to disk
         assertTrue(cache.isEntryDiskStored("F"));
+
+        //remove from file
+        cache.remove("F");
+
+        cache.clear();
     }
 }

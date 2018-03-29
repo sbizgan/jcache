@@ -26,7 +26,7 @@ public class CacheBuilder implements CacheDefaults {
     }
 
     /**
-     * Set the maximum number of objects stored on disk. This will enable by default disk caching.
+     * Set the maximum number of objects stored on disk. This will enable disk caching.
      */
     public CacheBuilder diskSize(int size) {
         if (size < 1)

@@ -12,9 +12,7 @@ public class CacheTest {
     // LOAD TEST
     public static void main(String[] args) {
         
-        Cache<String, String> cache = null;
-		try {
-			cache = new LRUCache<String, String>(
+        Cache<String, String> cache = new LRUCache<String, String>(
                             new CacheBuilder()
                                     .diskLocation(
                                         System.getProperty("user.home") + 
@@ -23,9 +21,6 @@ public class CacheTest {
                                     .memorySize(3)
                                     .diskSize(5)
                                     .printInternalsInDebug(true));
-		} catch (Exception e) {
-			e.printStackTrace();
-        }
 
         //Generate keys using RandomString generator
         RandomString keysGenerator = new RandomString(10);

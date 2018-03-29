@@ -16,13 +16,19 @@ public class StoreManager<K, V extends Serializable>  {
 
     private DiskStore<K, V> fileStore;
 
-    // Max disk size of the cache
+    /**
+     *  Max disk size of the cache
+     */
     private int maxDiskSize = CacheDefaults.DEFAULT_MAX_SIZE_DISK;
     
-    // Max disk size of the cache
+    /**
+     *  Max disk size of the cache
+     */
     private int maxMemorySize = CacheDefaults.DEFAULT_MAX_SIZE_DISK;
 
-    // Is disk caching enabled?
+    /**
+     *  Is disk storage enabled?
+     */
     private boolean diskEnabled = CacheDefaults.DEFAULT_DISK_ENABLED;
     
     public StoreManager() {
@@ -34,11 +40,11 @@ public class StoreManager<K, V extends Serializable>  {
     /** 
      * Load the value from either memory/disk
      */
-	public V getValue(K key, boolean diskStored) {
-        if (diskStored)
-            return fileStore.getValue(key);
+	public V getValue(CacheEntry<K, V> cacheEntry)  {
+        if (cacheEntry.isDiskStored())
+            return fileStore.getValue(cacheEntry);
         else
-            return memoryStore.get(key);
+            return memoryStore.get(cacheEntry.getKey());
 	}
 
     /**
@@ -46,17 +52,17 @@ public class StoreManager<K, V extends Serializable>  {
      * Will return <code>true</code> if stored on disk or <code>false</code> if 
      * stored on memory.
      */
-	public boolean put(K key, V value) {
+	public boolean put(CacheEntry<K, V> cacheEntry, V value) {
         
         // see first if memory has space
         if (memoryStore.size() < maxMemorySize) {
-            memoryStore.put(key, value);
+            memoryStore.put(cacheEntry.getKey(), value);
             return false;
         } 
         
         // see if disk has space
         if (diskEnabled && fileStore.size() < maxMemorySize) { 
-            fileStore.add(key, value);
+            fileStore.addUpdate(cacheEntry, value, true);
             return true;
         }
 
@@ -66,21 +72,25 @@ public class StoreManager<K, V extends Serializable>  {
 
 	}
 
-	public boolean switchStore(K key, boolean diskStored) {
-        if (diskStored)
-            return moveInMemory(key);
+
+    /**
+     * Moves current value between Disk store and Memory store
+     */
+	public boolean switchStore(CacheEntry<K, V> cacheEntry) {
+        if (cacheEntry.isDiskStored())
+            return moveInMemory(cacheEntry);
         else
-            return moveToDisk(key);
+            return moveToDisk(cacheEntry);
 	}
 
     /**
      * Move <code>value</code> corresponding to <code>key</code>
      * from Memory to Disk. This will return <code>true</code> as will be stored in diskStored variable
      */
-	private boolean moveToDisk(K key) {
-        V value = memoryStore.get(key);
-        memoryStore.remove(key);
-        fileStore.add(key, value);
+	private boolean moveToDisk(CacheEntry<K, V> cacheEntry) {
+        V value = memoryStore.get(cacheEntry.getKey());
+        memoryStore.remove(cacheEntry.getKey());
+        fileStore.addUpdate(cacheEntry, value, true);
         return true;
 	}
 
@@ -88,21 +98,30 @@ public class StoreManager<K, V extends Serializable>  {
      * Move <code>value</code> corresponding to <code>key</code>
      * from Disk to Memory. This will return <code>false</code> as will be stored in diskStored variable
      */
-	private boolean moveInMemory(K key) {
-        V value = fileStore.getValue(key);
-        fileStore.remove(key);
-        memoryStore.put(key, value);
+	private boolean moveInMemory(CacheEntry<K, V> cacheEntry) {
+        V value = fileStore.getValue(cacheEntry);
+        fileStore.remove(cacheEntry);
+        memoryStore.put(cacheEntry.getKey(), value);
         return false;
 	}
 
-    //TODO
-	public void updateValue(K key, V value, boolean diskStored) {
-        
+    /**
+     *  Update an existing value
+     */
+	public void updateValue(CacheEntry<K, V> cacheEntry, V value) {
+        if (cacheEntry.isDiskStored())
+            fileStore.addUpdate(cacheEntry, value, false);
+        else 
+            memoryStore.put(cacheEntry.getKey(), value);
 	}
 
-    //TODO
+    /**
+     *  Clear store 
+     */
 	public void clear() {
-        
+        if (diskEnabled)
+            fileStore.clear();
+        memoryStore.clear();
 	}
 
 	/**
@@ -162,12 +181,12 @@ public class StoreManager<K, V extends Serializable>  {
         return sb.toString();
     }
 
-	public V remove(K key, boolean diskStored) {
-        V value = getValue(key, diskStored);
-        if (diskStored)
-            fileStore.remove(key);
+	public V remove(CacheEntry<K, V> cacheEntry) {
+        V value = getValue(cacheEntry);
+        if (cacheEntry.isDiskStored())
+            fileStore.remove(cacheEntry);
         else
-            memoryStore.remove(key);
+            memoryStore.remove(cacheEntry.getKey());
         return value;
 	}
 
@@ -179,5 +198,6 @@ public class StoreManager<K, V extends Serializable>  {
 	public boolean isMemoryFull() {
 		return memoryStore.size() == maxMemorySize;
 	}
+
 
 }

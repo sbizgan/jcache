@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 
 import com.sbiz.cache.CacheDefaults;
 
@@ -17,8 +18,9 @@ import org.slf4j.LoggerFactory;
  * - https://www.cacheonix.org/articles/How_to_Cache_a_File_in_Java.htm
  * 	
  * 		TODO lock this diskLocation (so no other cache can use it)
- * 		TODO add subdirectories based on yyyyMMdd\hh\mm (keep locations on CacheEntry)
+ * 		DONE add subdirectories based on yyyyMMdd\hh\mm (keep locations on CacheEntry)
  * 		TODO manage empty subfolders when deleting!
+ * 		TODO manage situations where files / directories are deleted externally
  */
 
 public class DiskStore<K, V extends Serializable> {
@@ -35,11 +37,21 @@ public class DiskStore<K, V extends Serializable> {
 	public DiskStore() {
 		this.size = 0;
 		this.diskSize = 0;
-		setDiskLocation(CacheDefaults.DEFAULT_DISK_LOCATION + File.separator + ".jcache" + File.separator);
+		setDiskLocation(CacheDefaults.DEFAULT_DISK_LOCATION);
 	}
 
-	public void remove(K key) {
-		File fileToRemove = new File(getFileName(key));
+	/**
+	 * Create subfolders for cache entires based on current time
+	 */
+	public static String getNextSubFolder() {
+		return 
+			new SimpleDateFormat("yyyyMMdd|hh|mm|")
+					.format(System.currentTimeMillis())
+					.replace("|", File.separator);
+	}
+
+	public void remove(CacheEntry<K, V> cacheEntry) {
+		File fileToRemove = new File(getFileName(cacheEntry));
 		long fileSize = fileToRemove.length();
 		if (fileToRemove.delete()) {
 			size--;
@@ -47,15 +59,19 @@ public class DiskStore<K, V extends Serializable> {
 		}
 	}
 
-	public void add(K key, V value) {
+	public void addUpdate(CacheEntry<K, V> cacheEntry, V value, boolean add) {
 		try {
-			File file = new File(getFileName(key));
+			// Create folders
+			new File(getEntryFolder(cacheEntry)).mkdirs();
+			File file = new File(getFileName(cacheEntry));
+			
 			FileOutputStream fos = new FileOutputStream(file);
 			ObjectOutputStream out = new ObjectOutputStream(fos);
 			out.writeObject(value);
 			out.close();
 			diskSize += file.length();
-			size++;
+			if (add)
+				size++;
 		} catch (Exception e) {
 			logger.error("We've got an error writing cache entry to file: {}",
 					e.getLocalizedMessage());
@@ -63,10 +79,9 @@ public class DiskStore<K, V extends Serializable> {
 		}
 	}
 
-
-	public V getValue(K key) {
+	public V getValue(CacheEntry<K, V> cacheEntry) {
 		try {
-			FileInputStream file = new FileInputStream(new File(getFileName(key)));
+			FileInputStream file = new FileInputStream(new File(getFileName(cacheEntry)));
 			ObjectInputStream in = new ObjectInputStream(file);
 			@SuppressWarnings("unchecked") 
 				V value = (V)in.readObject();
@@ -81,10 +96,17 @@ public class DiskStore<K, V extends Serializable> {
 	public int size() {
 		return size;
 	}
-	
-	private String getFileName(K key) {
+
+	private String getEntryFolder(CacheEntry<K, V> cacheEntry) {
 		return new StringBuilder(diskLocation)
-					.append(key.hashCode())
+					.append(cacheEntry.getSubFolder())
+					.toString() ;
+	}
+	
+	private String getFileName(CacheEntry<K, V> cacheEntry) {
+		return new StringBuilder(diskLocation)
+					.append(cacheEntry.getSubFolder())
+					.append(cacheEntry.getKey().hashCode())
 					.toString() ;
 	}
 
@@ -100,6 +122,19 @@ public class DiskStore<K, V extends Serializable> {
 
 	public long getDiskSize() {
 		return diskSize;
+	}
+
+	public void clear() {
+		delete(new File(diskLocation));
+	}
+
+	private void delete(File f) {
+		if (f.isDirectory()) {
+		  for (File c : f.listFiles())
+			delete(c);
+		}
+		if (!f.delete())
+		  throw new SecurityException("Failed to delete file: " + f);
 	}
 
 }

@@ -1,10 +1,18 @@
 # jcache
-Java Cache implementations
 
 Covered requirements:
  - Thread safe
- - Support for multiple cache strategies
+ - Easy to extend for multiple cache strategies
  - Support 2 levels of cache (memory and disk) 
+
+Examples of initializing a cache:
+```
+new LFUCache<String, String>(new CacheBuilder()
+        .memorySize(3)
+        .diskSize(2);
+        
+new LRUCache<String, String>();        
+```
 
 Functionalities that need to be implemented:
  - Locking and cleaning of disk stores (locations)

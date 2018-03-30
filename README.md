@@ -9,7 +9,7 @@ Examples of initializing a cache:
 ```
 new LFUCache<String, String>(new CacheBuilder()
         .memorySize(3)
-        .diskSize(2);
+        .diskSize(2));
         
 new LRUCache<String, String>();        
 ```

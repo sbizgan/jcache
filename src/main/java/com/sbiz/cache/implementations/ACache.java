@@ -41,6 +41,7 @@ public abstract class ACache<K, V extends Serializable> implements Cache<K, V>, 
         store.setDiskEnabled(builder.isDiskEnabled());
 		store.setMaxDiskSize(builder.getMaxDiskSize());
 		store.setMaxMemorySize(builder.getMaxMemorySize());
+		store.setSubFoldersPattern(builder.getSubFoldersPattern());
 		store.build();
 		setUpdateExisting(builder.isUpdateExisting());
 		setPrintInternalsDebug(builder.isPrintInternalsDebug());
@@ -102,7 +103,7 @@ public abstract class ACache<K, V extends Serializable> implements Cache<K, V>, 
 		this.printInternalsDebug = printInternalsDebug;
 	}
 
-	public void put(K key, V value) {
+	public synchronized void put(K key, V value) {
 		if (isPrintInternalsDebug())
 			logger.debug("  Strategy info: {}", internals());
 	} 

@@ -4,7 +4,7 @@ Java Cache implementations
 Covered requirements:
  - Thread safe
  - Support for multiple cache strategies
- - Support 2 levels of cache (memory and disk)
+ - Support 2 levels of cache (memory and disk) 
 
 Functionalities that need to be implemented:
  - Locking and cleaning of disk stores (locations)
@@ -17,6 +17,7 @@ Functionalities that need to be implemented:
 Covered strategies:
  - LRU
  - LFU
+ 
 See [this wikipedia article][1] for more cache strategies
 
 [1]: https://en.wikipedia.org/wiki/Cache_replacement_policies

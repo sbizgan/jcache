@@ -182,6 +182,7 @@ public class StoreManager<K, V extends Serializable>  {
     }
 
 	public V remove(CacheEntry<K, V> cacheEntry) {
+        logger.debug("[{}] - removing from store", cacheEntry.getKey());
         V value = getValue(cacheEntry);
         if (cacheEntry.isDiskStored())
             fileStore.remove(cacheEntry);
@@ -197,6 +198,10 @@ public class StoreManager<K, V extends Serializable>  {
 
 	public boolean isMemoryFull() {
 		return memoryStore.size() == maxMemorySize;
+	}
+
+	public void setSubFoldersPattern(String subFoldersPattern) {
+        this.fileStore.setSubFoldersPattern(subFoldersPattern);
 	}
 
 

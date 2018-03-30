@@ -40,4 +40,6 @@ public interface CacheDefaults {
 
     public static final String LFU = "LFU";
 
+	public static final String DEFAULT_SUBFOLDERS_PATTERN = "yyyyMMdd|hh|mm|";
+
 }

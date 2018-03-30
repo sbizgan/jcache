@@ -11,14 +11,19 @@ public class CacheBuilder implements CacheDefaults {
     private int maxMemorySize = DEFAULT_MAX_SIZE_DISK;
     private boolean updateExisting = DEFAULT_UPDATE_EXISTING;
     private boolean printInternalsDebug = DEFAULT_PRINT_INTERNALS_DEBUG;
+    private String subFoldersPattern = DEFAULT_SUBFOLDERS_PATTERN;
 
-    //By default disk caching is disabled. Use this method to enable.
+    /**
+     * By default disk caching is disabled. Use this method to enable it.
+     */
     public CacheBuilder enableDiskCaching() {
         this.diskEnabled = true;
         return this;
     }
 
-    //This by default will enable diskCaching
+    /**
+     * Change the default disk location and enable diskCaching
+     */
     public CacheBuilder diskLocation(String diskLocation) {
         this.diskEnabled = true;
         this.diskLocation = diskLocation;
@@ -47,11 +52,20 @@ public class CacheBuilder implements CacheDefaults {
     }
 
     /**
-     * Update the values when accessing put() with keys alread in the cache
+     * Update the values when adding key/value pairs alread in the cache
      * @param updateExisting 
      */
     public CacheBuilder updateExisting(boolean updateExisting) {
         this.updateExisting = updateExisting;
+        return this;
+    }
+
+	/**
+	 * Change the default pattern for creating subfolders 
+	 * Must be time based and | will be replaced with File.separator ex: "yyyyMMdd|hh|mm|"
+	 */
+    public CacheBuilder subfolderPattern(String pattern) {
+        this.subFoldersPattern = pattern;
         return this;
     }
 
@@ -100,6 +114,20 @@ public class CacheBuilder implements CacheDefaults {
 	public CacheBuilder printInternalsInDebug(boolean printInternalsInDebug) {
         this.printInternalsDebug = printInternalsInDebug;
 		return this;
+	}
+
+	/**
+	 * @return the subFolderPatterns
+	 */
+	public String getSubFoldersPattern() {
+		return subFoldersPattern;
+	}
+
+	/**
+	 * @param subFolderPatterns the subFolderPatterns to set
+	 */
+	public void setSubFolderPatterns(String subFolderPatterns) {
+		this.subFoldersPattern = subFolderPatterns;
 	}
 
     

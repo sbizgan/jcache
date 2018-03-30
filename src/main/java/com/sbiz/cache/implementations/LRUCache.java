@@ -54,7 +54,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         logger.debug("{} | {} Cache initialized", this, cacheStrategy);
     }
 
-    public void put(K key, V value) {
+    public synchronized void put(K key, V value) {
 
         logger.debug("{} | Adding object with key {} ", this, key);
 
@@ -107,7 +107,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
 
     }
 
-    public V get(K key) {
+    public synchronized V get(K key) {
 
         logger.debug("{} | Getting object with key {} ", this, key);
 
@@ -173,7 +173,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
     }
 
     // Move least recent object to disk
-    private void demoteLeastRecentMemory() {
+    private synchronized void demoteLeastRecentMemory() {
         if (store.isDiskEnabled() && store.isMemoryFull() ) {
             boolean movedToDisk = leastRecentlyMemory.cacheEntry.switchStore();
             logger.debug("  {} moved to {}", leastRecentlyMemory.getKey(), (movedToDisk ? "disk" : "memory"));
@@ -182,7 +182,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
     }
 
     // Move least recent object to memory
-    private void promoteLeastRecentMemory() {
+    private synchronized void promoteLeastRecentMemory() {
         if (store.isDiskEnabled()) {
             Node<K, V> prevNode = leastRecentlyMemory.previous;
             // see if leastRecentlyMemory is last and if previous is diskStored
@@ -198,7 +198,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         return cache.containsKey(key);
     }
 
-    public V remove(K key) {
+    public synchronized V remove(K key) {
         logger.debug("{} | Removing object with key {} ", this, key);
 
         Node<K, V> currentNode = cache.get(key);
@@ -247,7 +247,7 @@ public class LRUCache<K, V extends Serializable> extends ACache<K, V> {
         return cache.isEmpty();
     }
 
-    public void clear() {
+    public synchronized void clear() {
         //clear map
         cache.clear();
         store.clear();

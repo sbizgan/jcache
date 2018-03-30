@@ -9,7 +9,7 @@ import java.io.File;
 public class CacheTest {
 
 
-    // LOAD TEST
+    // LOAD TEST LRU CACHE
     public static void main(String[] args) {
         
         Cache<String, String> cache = new LRUCache<String, String>(
@@ -18,19 +18,26 @@ public class CacheTest {
                                         System.getProperty("user.home") + 
                                         File.separator + ".jcache" + 
                                         File.separator + "testmain")
-                                    .memorySize(3)
-                                    .diskSize(5)
+                                    .memorySize(200000)
+                                    .diskSize(100000)
+                                    .subfolderPattern("yyyyMMdd|hh|mm|ss|")
                                     .printInternalsInDebug(true));
 
         //Generate keys using RandomString generator
         RandomString keysGenerator = new RandomString(10);
-        RandomString valuesGenerator = new RandomString(100);
+        RandomString valuesGenerator = new RandomString(300);
+
+        String payload = valuesGenerator.nextString(); //use the same payload as value
+
+        for (int i = 0; i < 203000; i++) {
+            cache.put(keysGenerator.nextString(), payload);
+        }
 
         keysGenerator.nextString();
         valuesGenerator.nextString();
 
         /** 
-         * Span two threads: 
+         *  TODO Span multiple threads: 
          *   one that will add keys/values (and adds keys to a reader)
          *   one that reads periodically random keys that were already added
          */

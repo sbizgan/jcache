@@ -50,20 +50,30 @@ class LFUCacheTest {
     @Test
     @DisplayName("Some basic tests")
     void basicTest() {
-        LFUCache<String, String> cache = null;
-		try {
-			cache = new LFUCache<String, String>(new CacheBuilder().memorySize(3).printInternalsInDebug(true));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			fail(e.getMessage());
-        }
+        LFUCache<String, String> cache = new LFUCache<String, String>(new CacheBuilder().memorySize(3).diskSize(2).printInternalsInDebug(true));
         
-        //TODO What will happen if we set Max size -1 or less than the size? test
         cache.put("A", "Bim");
         cache.put("B", "Bam");
         cache.get("A");
         cache.put("C", "Bum");
         cache.put("D", "Badabum");
+        cache.put("E", "Rapatam tap tap");
+        cache.get("A");
+
+        cache.put("F", "This is a test");
+        cache.put("G", "This is a test");
+        cache.get("G");
+        cache.get("E");
+        cache.put("H", "This is a test");
+        
+        //Remove from memory
+        cache.remove("H");
+
+        cache.put("I", "This is a test");
+
+        cache.remove("F");
+
+        cache.clear();
         assertTrue(true);
     }
 

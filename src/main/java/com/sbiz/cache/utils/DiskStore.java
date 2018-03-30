@@ -27,6 +27,8 @@ public class DiskStore<K, V extends Serializable> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+	private static String subfolderPattern = CacheDefaults.DEFAULT_SUBFOLDERS_PATTERN;
+
 	private int size;
 
 	private long diskSize;
@@ -45,7 +47,7 @@ public class DiskStore<K, V extends Serializable> {
 	 */
 	public static String getNextSubFolder() {
 		return 
-			new SimpleDateFormat("yyyyMMdd|hh|mm|")
+			new SimpleDateFormat(subfolderPattern)
 					.format(System.currentTimeMillis())
 					.replace("|", File.separator);
 	}
@@ -75,7 +77,6 @@ public class DiskStore<K, V extends Serializable> {
 		} catch (Exception e) {
 			logger.error("We've got an error writing cache entry to file: {}",
 					e.getLocalizedMessage());
-			e.printStackTrace();
 		}
 	}
 
@@ -114,6 +115,14 @@ public class DiskStore<K, V extends Serializable> {
 		if (diskLocation.lastIndexOf(File.separator) != (diskLocation.length()-1)) 
 			diskLocation += File.separator;
 		this.diskLocation = diskLocation;
+	}
+
+	/**
+	 * Change the default pattern for creating subfolders 
+	 * Must be one that is based on time and | separator ex: "yyyyMMdd|hh|mm|"
+	 */
+	public void setSubFoldersPattern(String pattern) {
+		subfolderPattern = pattern;
 	}
 
 	public void initLocation() {

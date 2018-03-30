@@ -8,7 +8,7 @@ import java.util.Random;
 public class RandomString {
 
     /**
-     * Generate a random string. See <a href="https://stackoverflow.com/a/41156/1531903">source</a> for more details
+     * Generate a random string. <a href="https://stackoverflow.com/a/41156/1531903">source</a>
      */
     public String nextString() {
         for (int idx = 0; idx < buf.length; ++idx)
